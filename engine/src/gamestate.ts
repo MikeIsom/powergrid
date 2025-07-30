@@ -34,6 +34,7 @@ export interface GameOptions {
     useNewRechargedSetup?: boolean;
     trackTotalSpent?: boolean;
     randomizeMap?: boolean;
+    disableStep3Discount?: boolean;
 }
 
 export enum ResourceType {

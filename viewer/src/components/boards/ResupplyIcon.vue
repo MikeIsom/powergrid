@@ -4,7 +4,7 @@
         <path
             d="M3 11a9 9 0 0 1 15.36-6.36L21 7m0-4v4h-4 M21 13a9 9 0 0 1-15.36 6.36L3 17m4 0H3v4"
             fill="none"
-            stroke="#66572b"
+            stroke="#4a5a6e"
             stroke-width="1.7"
             stroke-linecap="round"
             stroke-linejoin="round"

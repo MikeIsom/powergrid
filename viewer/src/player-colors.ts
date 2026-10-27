@@ -12,6 +12,27 @@ const namedColors: Record<string, string> = {
     yellow: '#ffff00',
     brown: '#a52a2a',
 };
+// The engine names seat colours after the original game; draw them with the
+// Okabe-Ito palette so all six stay distinct under common colour-vision deficiencies.
+const seatColors: Record<string, string> = {
+    limegreen: '#009e73',
+    mediumorchid: '#cc79a7',
+    red: '#d55e00',
+    dodgerblue: '#0072b2',
+    yellow: '#f0e442',
+    brown: '#56b4e9',
+};
+export const seatColorLabels: Record<string, string> = {
+    limegreen: 'Green',
+    mediumorchid: 'Pink',
+    red: 'Vermilion',
+    dodgerblue: 'Blue',
+    yellow: 'Yellow',
+    brown: 'Sky',
+};
+export function seatColor(color: string): string {
+    return seatColors[color] ?? color;
+}
 const hexColor = (color: unknown): string | undefined =>
     typeof color === 'string'
         ? namedColors[color] ?? (/^#[a-f0-9]{6}$/i.test(color) ? color.toLowerCase() : undefined)
@@ -91,7 +112,7 @@ export function resolvePlayerColors(
 }
 
 export function colorText(color = ''): string {
-    const hex = namedColors[color] ?? color;
+    const hex = seatColors[color] ?? namedColors[color] ?? color;
     if (!/^#[a-f0-9]{6}$/i.test(hex)) return '#111';
     const channels = [1, 3, 5].map((i) => {
         const value = parseInt(hex.slice(i, i + 2), 16) / 255;

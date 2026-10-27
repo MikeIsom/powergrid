@@ -2,7 +2,7 @@ import { ChatController, ChatMessage, chatSegments } from '@boardgamers/protocol
 import { mountChat } from '@boardgamers/protocol/chat/dom';
 import { attachChat, ViewerEmitter } from '@boardgamers/protocol/viewer';
 import { playerColors } from 'powergrid-engine/src/gamestate';
-import { colorText, resolvePlayerColors } from './player-colors';
+import { colorText, resolvePlayerColors, seatColor } from './player-colors';
 type ChatEmitter = Pick<ViewerEmitter<any, any>, 'on' | 'emit'>;
 export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): () => void {
     const chat = new ChatController();
@@ -151,7 +151,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
             message.playerIndex ??
             (message.author === 'You' ? localPlayer : players.find((p) => p.name === message.author)?.id);
         if (index !== undefined && playerColors[index]) {
-            const color = resolvePlayerColors(playerColors, players, colorPreferences, localPlayer)[index];
+            const color = seatColor(resolvePlayerColors(playerColors, players, colorPreferences, localPlayer)[index]);
             author.style.backgroundColor = color;
             author.style.color = colorText(color);
         }

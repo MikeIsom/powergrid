@@ -56,12 +56,20 @@
             {{ powerPlant.citiesPowered }}
         </text>
 
-        <g transform="translate(5, 20)">
-            <path :d="getResourcePath()" fill="white" />
-        </g>
-        <text v-if="powerPlant.cost > 0" text-anchor="middle" x="12.5" y="27.5" style="font-size: 12px" fill="black">
+        <text
+            v-if="powerPlant.cost > 0"
+            text-anchor="middle"
+            x="6.5"
+            y="27.5"
+            style="font-size: 12px"
+            font-weight="700"
+            fill="white"
+        >
             {{ powerPlant.cost }}
         </text>
+        <g :transform="isHybrid() ? 'translate(11.5, 22.5) scale(0.6)' : 'translate(12, 21.5) scale(0.78)'">
+            <path :d="getResourcePath()" fill="white" />
+        </g>
 
         <g transform="translate(24, 22)">
             <path d="M0,3 L8,3 L8,0 L14,6 L8,12 L8,9 L0,9Z" fill="white" />
@@ -80,12 +88,12 @@
         </g>
         <defs>
             <linearGradient id="hybrid" x1="0" y1="0" x2="100%" y2="100%">
-                <stop offset="50%" stop-color="#8b4513" />
-                <stop offset="50%" stop-color="#445" />
+                <stop offset="50%" stop-color="#6b4226" />
+                <stop offset="50%" stop-color="#2b2f38" />
             </linearGradient>
             <linearGradient id="garbageOilHybrid" x1="0" y1="0" x2="100%" y2="100%">
-                <stop offset="50%" stop-color="goldenrod" />
-                <stop offset="50%" stop-color="#445" />
+                <stop offset="50%" stop-color="#9a7a12" />
+                <stop offset="50%" stop-color="#2b2f38" />
             </linearGradient>
         </defs>
     </g>
@@ -125,29 +133,34 @@ export default class Card extends Mixins(Piece) {
 
     getColor() {
         switch (this.powerPlant?.type) {
-            case PowerPlantType.Coal: return '#8b4513';
-            case PowerPlantType.Oil: return '#445';
-            case PowerPlantType.Garbage: return 'goldenrod';
-            case PowerPlantType.Uranium: return 'red';
+            case PowerPlantType.Coal: return '#6b4226';
+            case PowerPlantType.Oil: return '#2b2f38';
+            case PowerPlantType.Garbage: return '#9a7a12';
+            case PowerPlantType.Uranium: return '#c8102e';
             case PowerPlantType.Hybrid: return 'url(#hybrid)';
-            case PowerPlantType.Wind: return 'limegreen';
-            case PowerPlantType.Nuclear: return 'dodgerblue';
-            case PowerPlantType.Step3: return 'dodgerblue';
+            case PowerPlantType.Wind: return '#00805f';
+            case PowerPlantType.Nuclear: return '#0072b2';
+            case PowerPlantType.Step3: return '#0072b2';
             case PowerPlantType.GarbageOilHybrid: return 'url(#garbageOilHybrid)';
         }
     }
 
+    isHybrid() {
+        return this.powerPlant?.type === PowerPlantType.Hybrid || this.powerPlant?.type === PowerPlantType.GarbageOilHybrid;
+    }
+
+    // Silhouettes of the resource tokens, so a plant's fuel reads by shape as well as colour.
     getResourcePath() {
         switch (this.powerPlant?.type) {
-            case PowerPlantType.Coal: return 'M0,3 L7.5,0 L15,3 L15,12 L7.5,15 L0,12Z';
-            case PowerPlantType.Oil: return 'M3,2 A6,3 0 0,1 12,2 L12,12 A6,3 0 0,1 3,12Z';
-            case PowerPlantType.Garbage: return 'M0,3 A7.5,3 0 0,1 15,3 L15,12 A7.5,3 0 0,1 0,12Z';
-            case PowerPlantType.Uranium: return 'M1,2 l4,-2 l6,0 l4,2 l0,11 l-4,2 l-6,0 l-4,-2Z';
-            case PowerPlantType.Hybrid: return 'M0,3 L7.5,0 L15,3 L15,12 L7.5,15 L0,12Z M9,1 A6,3 0 0,1 18,1 L18,10 A6,3 0 0,1 10,10Z';
+            case PowerPlantType.Coal: return 'M1.9,6 L5.3,1.9 L10.1,1.1 L13.9,4.5 L13.1,10.9 L8.3,13.9 L2.6,12Z';
+            case PowerPlantType.Oil: return 'M7.5,0.5 C7.5,0.5 2.8,6.5 2.8,9.6 A4.7,4.7 0 0,0 12.2,9.6 C12.2,6.5 7.5,0.5 7.5,0.5Z';
+            case PowerPlantType.Garbage: return 'M2,2 H13 V4.4 H2Z M3,5 H12 L11,14 H4Z';
+            case PowerPlantType.Uranium: return 'M3.5,4 A4,4 0 0,1 11.5,4 V11 A4,4 0 0,1 3.5,11Z';
+            case PowerPlantType.Hybrid: return 'M1.9,6 L5.3,1.9 L10.1,1.1 L13.9,4.5 L13.1,10.9 L8.3,13.9 L2.6,12Z M15,0.5 C15,0.5 10.3,6.5 10.3,9.6 A4.7,4.7 0 0,0 19.7,9.6 C19.7,6.5 15,0.5 15,0.5Z';
             case PowerPlantType.Wind: return '';
             case PowerPlantType.Nuclear: return '';
             case PowerPlantType.Step3: return '';
-            case PowerPlantType.GarbageOilHybrid: return 'M0,3 A7.5,3 0 0,1 15,3 L15,12 A7.5,3 0 0,1 0,12Z M9,1 A6,3 0 0,1 18,1 L18,10 A6,3 0 0,1 10,10Z';
+            case PowerPlantType.GarbageOilHybrid: return 'M2,2 H13 V4.4 H2Z M3,5 H12 L11,14 H4Z M15,0.5 C15,0.5 10.3,6.5 10.3,9.6 A4.7,4.7 0 0,0 19.7,9.6 C19.7,6.5 15,0.5 15,0.5Z';
         }
     }
 }

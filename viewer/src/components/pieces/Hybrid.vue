@@ -1,22 +1,35 @@
 <template>
     <g :id="elId" :class="['piece']" :transform="`translate(${currentX}, ${currentY})`">
-        <g transform="scale(0.08)">
-            <path
-                d="M136.8 21.2L43.1001 48.9L43.2001 167.2L135.2 210.3L228.8 174V55.7L136.8 21.2Z"
-                fill="#5a2d0c"
-                stroke="black"
-                stroke-width="20"
-                stroke-miterlimit="10"
-            />
-            <path d="M135.2 210.3L43.2001 167.2L43.1001 48.8999L135.1 83.4999L135.2 210.3Z" fill="#70380f" />
-            <path d="M135.1 83.5L43.1001 48.9L136.8 21.2L228.8 55.7L135.1 83.5Z" fill="#8b4513" />
-            <path d="M228.8 55.7V174L135.2 210.3L135.1 83.5L228.8 55.7Z" fill="#5a2d0c" />
+        <g transform="scale(0.8)">
+            <g>
+                <path
+                    d="M2.5,8 L7,2.5 L13.5,1.5 L18.5,6 L17.5,14.5 L11,18.5 L3.5,16Z"
+                    fill="#3d2717"
+                    stroke="#000"
+                    stroke-width="1.1"
+                    stroke-linejoin="round"
+                />
+                <path d="M2.5,8 L7,2.5 L13.5,1.5 L18.5,6 L11,8.5Z" fill="#8a5c3b" />
+                <path d="M2.5,8 L11,8.5 L11,18.5 L3.5,16Z" fill="#5e3d26" />
+                <path d="M6.5,5.5 L9.5,4.2" stroke="#c49a74" stroke-width="0.9" stroke-linecap="round" />
+            </g>
         </g>
-
-        <g transform="translate(5, 0)">
-            <path d="M6,4 A6,4,0 0,1 14,4 L14,16 A6,4 0 0,1 6,16Z" fill="none" stroke="black" />
-            <path d="M6,4 A6,4 0 0,0 14,4 A6,4 0 0,0 6,4" fill="#556" />
-            <path d="M6,4 A6,4 0 0,0 6,4 L6,16 A6,4,0 0,0 14,16 L14,4 A6,4 0 0,1 6,4" fill="url(#oil-linear)" />
+        <g transform="translate(7, 2) scale(0.8)">
+            <path
+                d="M10,1 C10,1 3.8,8.6 3.8,12.6 A6.2,6.2 0 0,0 16.2,12.6 C16.2,8.6 10,1 10,1Z"
+                fill="#1b1e25"
+                stroke="#d6dde6"
+                stroke-width="0.9"
+                stroke-linejoin="round"
+            />
+            <path
+                d="M6.9,11.6 A3.4,3.4 0 0,0 8.6,16.4"
+                fill="none"
+                stroke="#fff"
+                stroke-opacity="0.7"
+                stroke-width="1.4"
+                stroke-linecap="round"
+            />
         </g>
 
         <title>Coal/Oil</title>

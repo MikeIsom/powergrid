@@ -2,7 +2,7 @@
     <g class="resupply-badge" :data-resource="resource" :data-amount="amount">
         <title v-if="removal">Uranium mine market</title>
         <title v-else>Resource Resupply: {{ amount }}</title>
-        <rect width="76" height="28" rx="6" fill="#f4e5a8" stroke="#806b28" />
+        <rect width="76" height="28" rx="6" fill="#e4eaf1" stroke="#5b6b7f" />
         <component
             :is="resourceIcon"
             :pieceId="-1"

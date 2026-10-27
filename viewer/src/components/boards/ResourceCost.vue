@@ -26,7 +26,7 @@
                 dominant-baseline="middle"
                 font-size="32"
                 font-weight="700"
-                :fill="muted ? '#365343' : '#fff3cf'"
+                :fill="muted ? '#365343' : '#e6ecf2'"
                 >{{ amount }}</text
             >
         </template>
@@ -37,7 +37,7 @@
             text-anchor="middle"
             dominant-baseline="middle"
             font-size="28"
-            :fill="muted ? '#365343' : '#fff3cf'"
+            :fill="muted ? '#365343' : '#e6ecf2'"
             >—</text
         >
     </g>

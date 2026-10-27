@@ -2,20 +2,24 @@
     <g
         :id="elId"
         :class="[{ canClick: canClick }]"
-        :transform="`translate(${currentX}, ${currentY}) scale(${scale})`"
+        :transform="`translate(${currentX}, ${currentY}) scale(${scale / 0.08})`"
         :opacity="pieceOpacity"
         @click="canClick && $emit('click')"
     >
-        <path
-            d="M136.8 21.2L43.1001 48.9L43.2001 167.2L135.2 210.3L228.8 174V55.7L136.8 21.2Z"
-            fill="#5a2d0c"
-            stroke="black"
-            stroke-width="20"
-            stroke-miterlimit="10"
-        />
-        <path d="M135.2 210.3L43.2001 167.2L43.1001 48.8999L135.1 83.4999L135.2 210.3Z" fill="#70380f" />
-        <path d="M135.1 83.5L43.1001 48.9L136.8 21.2L228.8 55.7L135.1 83.5Z" fill="#8b4513" />
-        <path d="M228.8 55.7V174L135.2 210.3L135.1 83.5L228.8 55.7Z" fill="#5a2d0c" />
+        <!-- Faceted lump. Drawn in the shared 20-unit frame; the 0.08 default
+             keeps callers' scales from the original, larger artwork. -->
+        <g>
+            <path
+                d="M2.5,8 L7,2.5 L13.5,1.5 L18.5,6 L17.5,14.5 L11,18.5 L3.5,16Z"
+                fill="#3d2717"
+                stroke="#000"
+                stroke-width="1.1"
+                stroke-linejoin="round"
+            />
+            <path d="M2.5,8 L7,2.5 L13.5,1.5 L18.5,6 L11,8.5Z" fill="#8a5c3b" />
+            <path d="M2.5,8 L11,8.5 L11,18.5 L3.5,16Z" fill="#5e3d26" />
+            <path d="M6.5,5.5 L9.5,4.2" stroke="#c49a74" stroke-width="0.9" stroke-linecap="round" />
+        </g>
 
         <title>Coal</title>
     </g>

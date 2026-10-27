@@ -6,18 +6,19 @@
         :opacity="pieceOpacity"
         @click="canClick && $emit('click')"
     >
-        <path d="M2,5 A9,5,0 0,1 18,5 L18,15 A9,5 0 0,1 2,15Z" fill="none" stroke="black" stroke-miterlimit="0" />
-        <path d="M2,5 A9,5 0 0,0 18,5 A9,5 0 0,0 2,5" fill="#FF0" />
-        <path d="M2,5 A9,5 0 0,0 2,5 L2,15 A9,5,0 0,0 18,15 L18,5 A9,5 0 0,1 2,5" fill="url(#garbage-linear)" />
+        <!-- Bin with lid and ribs. -->
+        <path d="M8,4 V2.4 H12 V4" fill="none" stroke="#000" stroke-width="1.1" />
+        <path
+            d="M4.6,6.5 H15.4 L14.2,18.4 H5.8Z"
+            fill="#e8c547"
+            stroke="#000"
+            stroke-width="1"
+            stroke-linejoin="round"
+        />
+        <rect x="2.8" y="3.8" width="14.4" height="2.9" rx="0.8" fill="#b68f1a" stroke="#000" stroke-width="1" />
+        <path d="M8,9 V16.2 M10,9 V16.2 M12,9 V16.2" stroke="#7a5f0f" stroke-width="1.1" stroke-linecap="round" />
 
         <title>Garbage</title>
-
-        <defs>
-            <linearGradient id="garbage-linear" x1="0" y1="10" x2="20" y2="10" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#DD0" />
-                <stop offset="1" stop-color="#AA0" />
-            </linearGradient>
-        </defs>
     </g>
 </template>
 <script lang="ts">

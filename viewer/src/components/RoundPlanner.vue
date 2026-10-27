@@ -114,6 +114,6 @@ button:focus-visible {
     margin: 7px 0 0;
 }
 .notice {
-    color: #efcb88;
+    color: #e69f00;
 }
 </style>

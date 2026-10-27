@@ -6,11 +6,14 @@
         :opacity="pieceOpacity"
         @click="canClick && $emit('click')"
     >
-        <path d="M3,3 l4,-2 l6,0 l4,2 l0,11 l-4,2 l-6,0 l-4,-2Z" fill="#F00" stroke="black" />
-        <path d="M3,3 l4,-2 l6,0 l4,2 l0,2.1 l-4,2 l-6,0 l-4,-2 l0,-2.1" fill="#F00" />
-        <path d="M3,5 l0,9 l4.1,2 l0,-9 l-4.1,-2" fill="#e60000" />
-        <path d="M7,7 l6.1,0 l0,9 l-6.1,0 l0,-9" fill="#cc0000" />
-        <path d="M13,7 l4.1,-2 l0,9 l-4.1,2 l0,-9" fill="#b30000" />
+        <!-- Fuel rod with a radiation trefoil. -->
+        <rect x="4.6" y="1" width="10.8" height="18" rx="5.4" fill="#c8102e" stroke="#000" stroke-width="1" />
+        <circle cx="10" cy="10" r="4.6" fill="#ffe14d" />
+        <path
+            d="M8.50,10.00 L6.00,10.00 A4,4 0 0,1 8.00,6.54 L9.25,8.70 A1.5,1.5 0 0,0 8.50,10.00Z M10.75,8.70 L12.00,6.54 A4,4 0 0,1 14.00,10.00 L11.50,10.00 A1.5,1.5 0 0,0 10.75,8.70Z M10.75,11.30 L12.00,13.46 A4,4 0 0,1 8.00,13.46 L9.25,11.30 A1.5,1.5 0 0,0 10.75,11.30Z"
+            fill="#111"
+        />
+        <circle cx="10" cy="10" r="1" fill="#111" />
 
         <title>Uranium</title>
     </g>

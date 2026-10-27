@@ -328,7 +328,7 @@
                         width="26"
                         height="26"
                         rx="3"
-                        fill="goldenrod"
+                        fill="#4a5a6e"
                         stroke="#4d6322"
                         stroke-width="1.5"
                     />
@@ -338,7 +338,7 @@
                         width="26"
                         height="26"
                         rx="3"
-                        fill="goldenrod"
+                        fill="#4a5a6e"
                         stroke="#4d6322"
                         stroke-width="1.5"
                     />
@@ -383,7 +383,7 @@
                         width="26"
                         height="26"
                         rx="3"
-                        fill="goldenrod"
+                        fill="#4a5a6e"
                         stroke="#4d6322"
                         stroke-width="1.5"
                     />
@@ -393,7 +393,7 @@
                         width="26"
                         height="26"
                         rx="3"
-                        fill="goldenrod"
+                        fill="#4a5a6e"
                         stroke="#4d6322"
                         stroke-width="1.5"
                     />
@@ -665,10 +665,10 @@
                         v-for="color in getChooseableColors()"
                         :key="color"
                         class="confirm-button"
-                        :style="`background-color: ${color}; color: white; text-shadow: 0 0 3px black;`"
+                        :style="{ backgroundColor: seatColor(color), color: colorText(seatColor(color)) }"
                         @click="chooseColor(color)"
                     >
-                        {{ color }}
+                        {{ seatColorLabels[color] || color }}
                     </button>
                 </div>
             </div>
@@ -901,7 +901,7 @@
 </template>
 <script lang="ts">
 import { isEqual } from 'lodash';
-import { resolvePlayerColors, colorText } from '../player-colors';
+import { resolvePlayerColors, colorText, seatColor, seatColorLabels } from '../player-colors';
 import InlineLog from './InlineLog.vue';
 import { Vue, Component, Prop, Watch, Provide, ProvideReactive, Ref } from 'vue-property-decorator';
 import { MoveName, ended, playersSortedByScore, reconstructState } from 'powergrid-engine';
@@ -1189,12 +1189,16 @@ export default class Game extends Vue {
     _futureState?: GameState;
 
     colorText = colorText;
+    seatColor = seatColor;
+    seatColorLabels = seatColorLabels;
 
     defaultPlayerColors = ['limegreen', 'mediumorchid', 'red', 'dodgerblue', 'yellow', 'brown'];
 
     // Colors indexed by player id: BGS preferences, then drafted colors, then defaults.
     get playerColors() {
-        return resolvePlayerColors(this.defaultPlayerColors, this.G?.players ?? [], this.preferences, this.player);
+        return resolvePlayerColors(this.defaultPlayerColors, this.G?.players ?? [], this.preferences, this.player).map(
+            seatColor
+        );
     }
 
     animationQueue: Array<Function> = [];

@@ -8,7 +8,7 @@
                 :transform="`translate(0, ${row.y})`"
                 :data-resource-card="sourceKey(row)"
             >
-                <rect width="700" :height="rowHeight(row)" rx="9" fill="#f4e5a8" stroke="#806b28" stroke-width="2" />
+                <rect width="700" :height="rowHeight(row)" rx="9" fill="#e4eaf1" stroke="#5b6b7f" stroke-width="2" />
 
                 <!-- Buying and inspecting stock are separate, generous tap targets. -->
                 <g
@@ -25,7 +25,7 @@
                     <rect width="374" height="110" fill="transparent" pointer-events="all" />
                     <path
                         :d="isExpanded(row) ? 'M9 1H374V110H1V9Q1 1 9 1Z' : 'M9 1H374V109H9Q1 109 1 101V9Q1 1 9 1Z'"
-                        fill="#d9b54a"
+                        fill="#8fa3b8"
                         :stroke="row.buyable ? '#1e63d0' : 'none'"
                         stroke-width="4"
                     />
@@ -55,7 +55,7 @@
                             y="20"
                             dominant-baseline="middle"
                             font-size="24"
-                            fill="#3a2c08"
+                            fill="#1f2a36"
                             >+{{ row.atPrice - 3 }}</text
                         >
                     </g>
@@ -63,7 +63,7 @@
                         <path
                             d="M253 55 h22 m-8 -8 8 8 -8 8"
                             fill="none"
-                            stroke="#806b28"
+                            stroke="#5b6b7f"
                             stroke-width="3"
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -89,7 +89,7 @@
                     @keydown.enter.prevent="canUnbuy(row) && $emit('unbuyResource', row.move)"
                     @keydown.space.prevent="canUnbuy(row) && $emit('unbuyResource', row.move)"
                 >
-                    <rect x="374" y="1" width="116" height="108" fill="#f0e6c8" pointer-events="all" />
+                    <rect x="374" y="1" width="116" height="108" fill="#e9edf2" pointer-events="all" />
                     <g v-if="canUnbuy(row)" data-staged-tokens>
                         <g transform="translate(394, 16)"><ResourceToken :resource="row.move.resource" :size="29" /></g>
                         <text
@@ -99,7 +99,7 @@
                             dominant-baseline="middle"
                             font-size="30"
                             font-weight="700"
-                            fill="#3a2c08"
+                            fill="#1f2a36"
                             >{{ stagedCount(row) }}</text
                         >
                     </g>
@@ -109,13 +109,13 @@
                         text-anchor="middle"
                         dominant-baseline="middle"
                         :font-size="canUnbuy(row) ? 38 : 48"
-                        fill="#3a2c08"
+                        fill="#1f2a36"
                         >↶</text
                     >
                     <title>{{ row.label }}: {{ stagedCount(row) }} · − take back</title>
                 </g>
 
-                <line x1="490" x2="490" y1="1" y2="109" stroke="#b9a267" stroke-width="1.5" pointer-events="none" />
+                <line x1="490" x2="490" y1="1" y2="109" stroke="#8796a8" stroke-width="1.5" pointer-events="none" />
 
                 <g
                     class="canClick"
@@ -179,7 +179,7 @@
                     <path
                         :d="isExpanded(row) ? 'M647 62 l13 -13 13 13' : 'M647 49 l13 13 13 -13'"
                         fill="none"
-                        stroke="#806b28"
+                        stroke="#5b6b7f"
                         stroke-width="3"
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -217,12 +217,12 @@
                             width="106"
                             height="104"
                             rx="5"
-                            :fill="tier.price === row.price ? '#e5cc83' : '#faefc9'"
+                            :fill="tier.price === row.price ? '#b8c4d2' : '#faefc9'"
                             :stroke="
                                 canBuyTier(row, tier.price)
                                     ? '#1e63d0'
                                     : tier.price === row.price
-                                    ? '#665320'
+                                    ? '#3f4c5c'
                                     : '#cbb774'
                             "
                             :stroke-width="tier.price === row.price ? 2 : 1"
@@ -240,7 +240,7 @@
                         >
                             <ResourceToken :resource="row.move.resource" :size="26" />
                         </g>
-                        <text v-if="tier.cubes === 0" x="53" y="81" text-anchor="middle" font-size="25" fill="#3a2c08"
+                        <text v-if="tier.cubes === 0" x="53" y="81" text-anchor="middle" font-size="25" fill="#1f2a36"
                             >—</text
                         >
                         <text
@@ -272,8 +272,8 @@
                         :transform="`translate(${145 + (s - 1) * 180}, 0)`"
                         :opacity="s < currentStep ? 0.45 : 1"
                     >
-                        <rect width="164" height="44" rx="5" :fill="s === currentStep ? '#e5cc83' : 'none'" />
-                        <text x="13" y="23" dominant-baseline="middle" font-size="24" fill="#3a2c08">S{{ s }}</text>
+                        <rect width="164" height="44" rx="5" :fill="s === currentStep ? '#b8c4d2' : 'none'" />
+                        <text x="13" y="23" dominant-baseline="middle" font-size="24" fill="#1f2a36">S{{ s }}</text>
                         <text
                             x="151"
                             y="23"
@@ -290,7 +290,7 @@
                             x2="42"
                             y1="38"
                             y2="38"
-                            stroke="#b68b00"
+                            stroke="#e69f00"
                             stroke-width="2"
                         />
                         <title>Resource Resupply: {{ restockFor(row, s) }}</title>

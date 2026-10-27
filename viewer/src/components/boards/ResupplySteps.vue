@@ -20,8 +20,8 @@
                 width="34"
                 height="28"
                 rx="5"
-                :fill="selected === step ? '#e5cc83' : '#f4e5a8'"
-                :stroke="selected === step ? '#665320' : '#806b28'"
+                :fill="selected === step ? '#b8c4d2' : '#e4eaf1'"
+                :stroke="selected === step ? '#3f4c5c' : '#5b6b7f'"
                 :stroke-width="selected === step ? 2 : 1"
             />
             <text
@@ -33,7 +33,7 @@
                 style="font: bold 14px Arial"
                 >S{{ step }}</text
             >
-            <line v-if="current === step" x1="9" x2="25" y1="25" y2="25" stroke="#d7a900" stroke-width="2" />
+            <line v-if="current === step" x1="9" x2="25" y1="25" y2="25" stroke="#e69f00" stroke-width="2" />
         </g>
     </g>
 </template>

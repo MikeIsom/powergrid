@@ -1,6 +1,6 @@
 <template>
     <g>
-        <rect x="10" y="10" width="185" height="40" rx="3" fill="goldenrod" />
+        <rect x="10" y="10" width="185" height="40" rx="3" fill="#4a5a6e" />
         <template v-for="index in 6">
             <rect
                 :key="'playerOrder' + index"
@@ -9,7 +9,7 @@
                 width="24"
                 height="30"
                 rx="2"
-                fill="darkgoldenrod"
+                fill="#2f3b4a"
             />
             <text
                 :key="'playerOrderText' + index"
@@ -17,7 +17,7 @@
                 style="font-size: 32px; font-family: monospace"
                 :x="27 + 30 * (index - 1)"
                 y="30"
-                fill="gold"
+                fill="#e9edf2"
             >
                 {{ index }}
             </text>

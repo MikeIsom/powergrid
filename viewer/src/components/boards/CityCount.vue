@@ -1,7 +1,7 @@
 <template>
     <g class="city-count-track">
         <g v-for="row in compact ? 2 : 1" :key="'row' + row" :transform="`translate(0, ${(row - 1) * 70})`">
-            <rect :width="compact ? 367 : 730" height="68" x="10" y="10" rx="3" fill="goldenrod" />
+            <rect :width="compact ? 367 : 730" height="68" x="10" y="10" rx="3" fill="#4a5a6e" />
             <rect :width="compact ? 359 : 722" height="20" x="14" y="56" rx="2" fill="#365343" />
         </g>
         <g
@@ -42,8 +42,8 @@
                 x="13"
                 y="14"
                 rx="2"
-                fill="darkgoldenrod"
-                :stroke="count == citiesToStep2 || count == citiesToEndGame ? '#916a08' : 'darkgoldenrod'"
+                fill="#2f3b4a"
+                :stroke="count == citiesToStep2 || count == citiesToEndGame ? '#e69f00' : '#2f3b4a'"
                 stroke-width="2px"
             />
             <text
@@ -52,7 +52,7 @@
                 letter-spacing="-2"
                 x="26"
                 y="27"
-                fill="gold"
+                fill="#e9edf2"
             >
                 {{ count }}
             </text>
@@ -63,7 +63,7 @@
                 y="66"
                 text-anchor="middle"
                 style="font-size: 15px; dominant-baseline: central"
-                :fill="count === markerCount ? (powerCapacity !== undefined ? '#183b4f' : '#183b32') : '#fff3cf'"
+                :fill="count === markerCount ? (powerCapacity !== undefined ? '#183b4f' : '#183b32') : '#e6ecf2'"
                 :font-weight="count === markerCount ? 'bold' : 'normal'"
             >
                 {{ income }}
@@ -86,7 +86,7 @@
         </g>
         <g class="city-income-legend" :transform="`translate(0, ${compact ? 157 : 87})`">
             <circle cx="21" cy="0" r="7" fill="#365343" />
-            <text x="21" text-anchor="middle" font-size="11" fill="#fff3cf">{{
+            <text x="21" text-anchor="middle" font-size="11" fill="#e6ecf2">{{
                 poweredCities !== undefined || powerCapacity !== undefined ? 'ϟ' : '$'
             }}</text>
             <text x="33" y="0" style="font-size: 13px; dominant-baseline: central" fill="#29432e">
@@ -172,7 +172,7 @@ export default class CityCount extends Vue {
             this.houses.push({
                 id: pi + '_cityCount',
                 cityCount: player.cities.length,
-                // CELL_CENTRE_X/BOTTOM are the darkgoldenrod cell drawn in the template.
+                // CELL_CENTRE_X/BOTTOM are the #2f3b4a cell drawn in the template.
                 x:
                     sharing.length == 1
                         ? CELL_CENTRE_X - HOUSE_WIDTH / 2

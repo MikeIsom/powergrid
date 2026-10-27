@@ -474,6 +474,7 @@
                     :highlightButton="canUsePhaseButton"
                     :text="phaseButtonText"
                     :icon="phaseButtonIcon"
+                    :label="phaseButtonLabel"
                     @click="usePhaseButton"
                 />
                 <!-- BGS's "Undo my move" (games against bots) takes this button's
@@ -601,7 +602,7 @@
 
         <div class="chat-tabs-host"></div>
         <div class="journal-and-chat">
-            <InlineLog v-if="G" :entries="logReversed.slice().reverse()" :state="G" />
+            <InlineLog v-if="G" :entries="logReversed" :state="G" />
             <div class="chat-host"></div>
         </div>
 
@@ -1416,6 +1417,14 @@ export default class Game extends Vue {
             case Phase.Bureaucracy: return 'Finish powering';
             default: return 'Done';
         }
+    }
+    // Fits the 80-wide button beside the icon; the icon names the phase being finished.
+    get phaseButtonLabel(): string {
+        const text = this.phaseButtonText;
+        if (text === 'Pass bid' || text === 'Edit bid' || text === 'Done') return text;
+        if (text === 'Skip auction') return 'Skip';
+        if (text === 'Edit powering') return 'Edit';
+        return 'Finish';
     }
     get phaseButtonIcon(): string {
         if (this.revisableBid && !this.changingBid || this.canChangePowering) return 'edit';
@@ -3547,6 +3556,10 @@ text {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+.pass-label {
+    font: 700 11px Arial, sans-serif;
 }
 
 .button {

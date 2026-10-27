@@ -8,6 +8,8 @@
                         v-if="part.plant"
                         :key="i"
                         class="journal-plant"
+                        width="48"
+                        height="33"
                         viewBox="-2 -2 64 44"
                         role="img"
                         :aria-label="plantLabel(part.plant)"
@@ -76,15 +78,16 @@ export default class InlineLog extends Vue {
             this.$nextTick(this.scrollToLatest);
         }
     }
+    // Newest entries are first, so following the game means staying at the top.
     scrollToLatest() {
         const feed = this.$refs.feed as HTMLElement;
         if (feed?.clientHeight) {
-            feed.scrollTop = feed.scrollHeight;
+            feed.scrollTop = 0;
         }
     }
     onScroll() {
         const feed = this.$refs.feed as HTMLElement;
-        if (feed.clientHeight) this.follow = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 1;
+        if (feed.clientHeight) this.follow = feed.scrollTop <= 1;
     }
 }
 </script>
@@ -110,8 +113,8 @@ summary {
     margin-top: 8px;
 }
 .journal-plant {
-    width: 76px;
-    height: 52px;
+    width: 48px;
+    height: 33px;
     vertical-align: middle;
     margin: 1px 4px;
     overflow: visible;

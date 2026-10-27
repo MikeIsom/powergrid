@@ -13,7 +13,7 @@
         <rect width="80" height="26" fill="#e9edf2" stroke="#1f2a36" rx="5" />
         <path
             :d="iconPath"
-            transform="translate(30, 4)"
+            :transform="label ? 'translate(6, 5) scale(0.95)' : 'translate(30, 4)'"
             fill="none"
             stroke="black"
             stroke-width="1.5"
@@ -21,6 +21,7 @@
             stroke-linejoin="round"
             aria-hidden="true"
         />
+        <text v-if="label" x="25" y="13.5" class="pass-label" fill="#1f2a36">{{ label }}</text>
         <title>{{ text }}</title>
     </g>
 </template>
@@ -33,6 +34,8 @@ export default class PassButton extends Vue {
     @Prop() highlightButton!: boolean;
     @Prop() text!: string;
     @Prop({ default: 'done' }) icon!: string;
+    /** Short verb shown after the icon; the full action stays in the tooltip. */
+    @Prop() label?: string;
 
     get iconPath(): string {
         const paths: Record<string, string> = {

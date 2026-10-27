@@ -29,49 +29,30 @@
             <text text-anchor="middle" fill="white">{{ powerPlant.number }}</text>
         </g>
 
-        <g :id="elId" :class="['piece']" transform="translate(40, 20) scale(0.035)">
-            <path
-                d="M187.698 263.636V456.017L3 341.204V169.522L80.8579 108.141L187.698 263.636Z"
-                fill="white"
-                stroke="white"
-                stroke-width="12"
-                stroke-miterlimit="10"
-            />
-            <path
-                d="M395.724 136.361V300.164L187.698 456.017V263.636L395.724 136.361Z"
-                fill="white"
-                stroke="white"
-                stroke-width="12"
-                stroke-miterlimit="10"
-            />
-            <path
-                d="M395.724 136.361L187.698 263.636L80.8579 108.141L304.771 4L395.724 136.361Z"
-                fill="white"
-                stroke="white"
-                stroke-width="12"
-                stroke-miterlimit="10"
-            />
+        <!-- Fuel and cities read the same way: white count, then a ~15-unit icon. -->
+        <g :id="elId" :class="['piece']" transform="translate(45, 20.5)">
+            <path d="M6.5,0.5 L13,6 V15 H0 V6Z" fill="white" />
         </g>
-        <text text-anchor="middle" x="47" y="28" style="font-size: 12px" fill="black">
+        <text text-anchor="middle" x="40" y="28" style="font-size: 12px" font-weight="700" fill="white">
             {{ powerPlant.citiesPowered }}
         </text>
 
         <text
             v-if="powerPlant.cost > 0"
             text-anchor="middle"
-            x="6.5"
-            y="27.5"
+            x="5"
+            y="28"
             style="font-size: 12px"
             font-weight="700"
             fill="white"
         >
             {{ powerPlant.cost }}
         </text>
-        <g :transform="isHybrid() ? 'translate(11.5, 22.5) scale(0.6)' : 'translate(12, 21.5) scale(0.78)'">
+        <g :transform="isHybrid() ? 'translate(9.5, 22) scale(0.76)' : 'translate(10, 20.5)'">
             <path :d="getResourcePath()" fill="white" />
         </g>
 
-        <g transform="translate(24, 22)">
+        <g transform="translate(26, 23.8) scale(0.7)">
             <path d="M0,3 L8,3 L8,0 L14,6 L8,12 L8,9 L0,9Z" fill="white" />
         </g>
 

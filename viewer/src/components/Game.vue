@@ -566,6 +566,7 @@
                         :showBid="!G.options.fastBid"
                         :phase="G.phase"
                         :isAustralia="G.map.name === 'Australia'"
+                        :plantSlots="G.players.length === 2 ? 4 : 3"
                         :showAutoPass="player == playerIndex && showAutoPass"
                         :autoPass="!!G.options.showMoney || !!(settings && settings.autoPassBids)"
                         :autoPassPublic="!!G.options.showMoney"

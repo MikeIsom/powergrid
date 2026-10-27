@@ -39,9 +39,19 @@
         >
             {{ getPlayerName() }}
         </text>
-        <text v-if="showMoney" x="250" y="13" font-weight="600" :fill="colorText(color)"
-            >Money: ${{ player.money }}</text
-        >
+        <g class="board-stats" :fill="colorText(color)">
+            <g transform="translate(222, 5)">
+                <path d="M6.5,0.5 L13,6 V15 H0 V6Z" transform="scale(0.95)" />
+                <text x="16" y="8" font-weight="700">{{ player.cities.length }}</text>
+                <title>{{ player.cities.length }} cities connected</title>
+            </g>
+            <g transform="translate(262, 4)">
+                <path d="M8,0 L1,10 H6 L4.5,17 L12,6.5 H7 L9,0Z" />
+                <text x="15" y="9" font-weight="700">{{ plantCapacity }}</text>
+                <title>Plants can power up to {{ plantCapacity }} cities</title>
+            </g>
+            <text v-if="showMoney" x="345" y="13" text-anchor="end" font-weight="700">${{ player.money }}</text>
+        </g>
 
         <!-- Keep the full preference inside the viewer's own player card. -->
         <template v-if="showAutoPass">
@@ -96,6 +106,46 @@
             @click="powerPlantClick(powerPlant)"
         />
 
+        <!-- Open plant slots up to the hand limit. -->
+        <rect
+            v-for="i in emptySlots"
+            :key="'emptySlot' + i"
+            class="empty-plant-slot"
+            :x="cardX(player.powerPlants.length + i - 1)"
+            y="30"
+            width="60"
+            height="40"
+            rx="4"
+            fill="none"
+            stroke="#8796a8"
+            stroke-width="1.5"
+            stroke-dasharray="4 3"
+        />
+
+        <!-- Fuel sitting on each plant, as on the physical cards: filled for a
+             stored token, outlined for room left. Storage is pooled per type in the
+             engine, so this fills dedicated plants first, then hybrids. -->
+        <g
+            v-for="(slots, i) in fuelOnPlants"
+            :key="'fuel_' + i"
+            class="plant-fuel"
+            :transform="`translate(${cardX(i)}, 72)`"
+        >
+            <g
+                v-for="(slot, j) in slots"
+                :key="j"
+                :transform="`translate(${fuelPipX(slots.length, j)}, 0) scale(0.55)`"
+            >
+                <path
+                    :d="pipPath(slot.type)"
+                    :fill="slot.filled ? pipColor(slot.type) : 'none'"
+                    :stroke="slot.filled ? '#1f2a36' : '#8796a8'"
+                    stroke-width="1.6"
+                    stroke-linejoin="round"
+                />
+            </g>
+        </g>
+
         <!-- Australia: mark uranium mines (they sell uranium instead of powering
              cities, and don't count toward the 3-plant limit) with a green frame
              and a uranium badge. -->
@@ -139,10 +189,10 @@
         <g v-if="canClickResources">
             <rect
                 v-if="canClickResource('coal')"
-                width="30"
-                height="30"
-                x="0"
-                y="71"
+                width="24"
+                height="20"
+                x="2"
+                y="80"
                 fill="none"
                 stroke="blue"
                 stroke-width="2px"
@@ -150,10 +200,10 @@
             />
             <rect
                 v-if="canClickResource('oil')"
-                width="30"
-                height="30"
-                x="70"
-                y="71"
+                width="24"
+                height="20"
+                x="72"
+                y="80"
                 fill="none"
                 stroke="blue"
                 stroke-width="2px"
@@ -161,10 +211,10 @@
             />
             <rect
                 v-if="canClickResource('garbage')"
-                width="30"
-                height="30"
-                x="140"
-                y="71"
+                width="24"
+                height="20"
+                x="142"
+                y="80"
                 fill="none"
                 stroke="blue"
                 stroke-width="2px"
@@ -172,40 +222,50 @@
             />
         </g>
 
-        <Coal
-            :pieceId="'Coal' + player.id"
-            :targetState="{ x: 5, y: 76 }"
-            :canClick="canClickResource('coal')"
-            @click="clickResource('coal')"
-        />
-        <text text-anchor="middle" x="40" y="85" fill="black">{{ player.coalLeft }}</text>
-
-        <Oil
-            :pieceId="'Oil' + player.id"
-            :targetState="{ x: 75, y: 76 }"
-            :canClick="canClickResource('oil')"
-            @click="clickResource('oil')"
-        />
-        <text text-anchor="middle" x="110" y="85" fill="black">{{ player.oilLeft }}</text>
-
-        <Garbage
-            :pieceId="'Garbage' + player.id"
-            :targetState="{ x: 145, y: 76 }"
-            :canClick="canClickResource('garbage')"
-            @click="clickResource('garbage')"
-        />
-        <text text-anchor="middle" x="180" y="85" fill="black">{{ player.garbageLeft }}</text>
-
-        <Uranium :pieceId="'Uranium' + player.id" :targetState="{ x: 215, y: 76 }" />
-        <text text-anchor="middle" x="250" y="85" fill="black">{{ player.uraniumLeft }}</text>
+        <g
+            v-for="(stock, k) in fuelStock"
+            :key="stock.resource"
+            :class="['fuel-stock', { empty: !stock.left && !stock.capacity }]"
+            :transform="`translate(${4 + 70 * k}, 81)`"
+        >
+            <g transform="scale(0.8)">
+                <Coal
+                    v-if="stock.resource === 'coal'"
+                    :pieceId="'Coal' + player.id"
+                    :targetState="{ x: 0, y: 0 }"
+                    :canClick="canClickResource('coal')"
+                    @click="clickResource('coal')"
+                />
+                <Oil
+                    v-else-if="stock.resource === 'oil'"
+                    :pieceId="'Oil' + player.id"
+                    :targetState="{ x: 0, y: 0 }"
+                    :canClick="canClickResource('oil')"
+                    @click="clickResource('oil')"
+                />
+                <Garbage
+                    v-else-if="stock.resource === 'garbage'"
+                    :pieceId="'Garbage' + player.id"
+                    :targetState="{ x: 0, y: 0 }"
+                    :canClick="canClickResource('garbage')"
+                    @click="clickResource('garbage')"
+                />
+                <Uranium v-else :pieceId="'Uranium' + player.id" :targetState="{ x: 0, y: 0 }" />
+            </g>
+            <text x="21" y="9" fill="#1f2a36">
+                <tspan font-weight="700">{{ stock.left }}</tspan
+                ><tspan fill="#5b6b7f" style="font-size: 12px">/{{ stock.capacity }}</tspan>
+            </text>
+            <title>{{ stock.title }}</title>
+        </g>
 
         <!-- Time this player has spent on the clock. Ticks live while it is their
              turn; sits in the free space right of the resource counters. -->
         <text
             text-anchor="end"
             x="345"
-            y="85"
-            fill="black"
+            y="90"
+            fill="#1f2a36"
             :font-weight="isCurrentPlayer ? 700 : 400"
             style="font-size: 13px"
         >
@@ -252,6 +312,8 @@ export default class PlayerBoard extends Vue {
     @Prop({ default: false }) autoPass!: boolean;
     @Prop({ default: false }) autoPassPublic!: boolean;
     @Prop({ default: true }) autoPassDisabled!: boolean;
+    /** Hand limit: 3 plants, 4 in a two-player game. */
+    @Prop({ default: 3 }) plantSlots!: number;
 
     settingRowHeight = PLAYER_SETTING_ROW_HEIGHT;
 
@@ -294,6 +356,90 @@ export default class PlayerBoard extends Vue {
         const n = this.player.powerPlants.length;
         if (n < 5) return 20 + 80 * i;
         return 5 + Math.min(70, 280 / (n - 1)) * i;
+    }
+
+    get emptySlots(): number {
+        return Math.max(0, this.plantSlots - this.player.powerPlants.length);
+    }
+
+    get plantCapacity(): number {
+        return this.player.powerPlants
+            .filter((plant) => !this.isMine(plant))
+            .reduce((sum, plant) => sum + plant.citiesPowered, 0);
+    }
+
+    get fuelStock() {
+        const p = this.player;
+        const garbageOil = p.garbageOilHybridCapacity || 0;
+        const shared = (n: number) => (n ? ` (${n} shared with hybrid plants)` : '');
+        return [
+            { resource: 'coal', left: p.coalLeft, capacity: p.coalCapacity + p.hybridCapacity, extra: p.hybridCapacity },
+            { resource: 'oil', left: p.oilLeft, capacity: p.oilCapacity + p.hybridCapacity + garbageOil, extra: p.hybridCapacity + garbageOil },
+            { resource: 'garbage', left: p.garbageLeft, capacity: p.garbageCapacity + garbageOil, extra: garbageOil },
+            { resource: 'uranium', left: p.uraniumLeft, capacity: p.uraniumCapacity, extra: 0 },
+        ].map((stock) => ({
+            ...stock,
+            title: `${stock.resource[0].toUpperCase() + stock.resource.slice(1)}: ${stock.left} stored, room for ${
+                stock.capacity
+            }${shared(stock.extra)}`,
+        }));
+    }
+
+    /** Storage slots per plant, filled from the pooled fuel: dedicated plants first, then hybrids. */
+    get fuelOnPlants(): { type: string; filled: boolean }[][] {
+        const left: Record<string, number> = {
+            coal: this.player.coalLeft,
+            oil: this.player.oilLeft,
+            garbage: this.player.garbageLeft,
+            uranium: this.player.uraniumLeft,
+        };
+        const single = ['coal', 'oil', 'garbage', 'uranium'];
+        const take = (type: string, max: number) => {
+            const n = Math.min(max, left[type]);
+            left[type] -= n;
+            return n;
+        };
+        const slots = this.player.powerPlants.map(() => [] as { type: string; filled: boolean }[]);
+        const room = (plant: PowerPlant) =>
+            plant.type === PowerPlantType.Garbage && plant.storage ? plant.storage : plant.cost * 2;
+        this.player.powerPlants.forEach((plant, i) => {
+            const type = single[plant.type];
+            if (!type || this.isMine(plant) || plant.cost === 0) return;
+            const filled = take(type, room(plant));
+            for (let k = 0; k < room(plant); k++) slots[i].push({ type, filled: k < filled });
+        });
+        this.player.powerPlants.forEach((plant, i) => {
+            const other = this.hybridFuel(plant);
+            if (!other) return;
+            const first = take(other, room(plant));
+            const oil = take('oil', room(plant) - first);
+            for (let k = 0; k < first; k++) slots[i].push({ type: other, filled: true });
+            for (let k = 0; k < oil; k++) slots[i].push({ type: 'oil', filled: true });
+            while (slots[i].length < room(plant)) slots[i].push({ type: 'hybrid', filled: false });
+        });
+        return slots;
+    }
+
+    fuelPipX(count: number, j: number): number {
+        // Centre the strip under the 60-wide card; pips are ~8.5 wide.
+        const step = 9.5;
+        return 30 - (count * step) / 2 + j * step + 0.5;
+    }
+
+    pipPath(type: string): string {
+        switch (type) {
+            case 'coal': return 'M1.9,6 L5.3,1.9 L10.1,1.1 L13.9,4.5 L13.1,10.9 L8.3,13.9 L2.6,12Z';
+            case 'oil': return 'M7.5,0.5 C7.5,0.5 2.8,6.5 2.8,9.6 A4.7,4.7 0 0,0 12.2,9.6 C12.2,6.5 7.5,0.5 7.5,0.5Z';
+            case 'garbage': return 'M2,2 H13 V4.4 H2Z M3,5 H12 L11,14 H4Z';
+            case 'uranium': return 'M3.5,4 A4,4 0 0,1 11.5,4 V11 A4,4 0 0,1 3.5,11Z';
+            default: return 'M7.5,1.5 A6,6 0 1,1 7.49,1.5Z';
+        }
+    }
+
+    pipColor(type: string): string {
+        return ({ coal: '#8a5c3b', oil: '#1b1e25', garbage: '#e8c547', uranium: '#c8102e' } as Record<string, string>)[
+            type
+        ];
     }
 
     isMine(powerPlant: PowerPlant): boolean {
@@ -432,6 +578,10 @@ export default class PlayerBoard extends Vue {
 }
 </script>
 <style scoped>
+/* Fuel you have no room for yet steps back so the stock you can use stands out. */
+.fuel-stock.empty {
+    opacity: 0.35;
+}
 .auction-auto-pass.editable {
     cursor: pointer;
 }

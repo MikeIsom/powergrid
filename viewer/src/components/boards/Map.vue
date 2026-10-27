@@ -18,8 +18,9 @@
                 r="25"
                 :cx="city.x"
                 :cy="city.y"
-                :fill="city.region"
-                stroke="black"
+                :fill="regionColor(city.region)"
+                :stroke="ink.outline"
+                stroke-width="1.5"
             >
                 <title>{{ city.name }}</title>
             </circle>
@@ -29,8 +30,9 @@
                 r="20"
                 :cx="city.x"
                 :cy="city.y"
-                fill="gray"
-                stroke="black"
+                :fill="ink.city"
+                :stroke="ink.outline"
+                stroke-width="1.5"
             >
                 <title>{{ city.name }}</title>
             </circle>
@@ -86,8 +88,9 @@
                 :y1="getY1(connection)"
                 :x2="getX2(connection)"
                 :y2="getY2(connection)"
-                stroke-width="10"
-                stroke="black"
+                stroke-width="9"
+                :stroke="ink.outline"
+                stroke-linecap="round"
             />
             <line
                 :key="connection.nodes[0] + '_' + connection.nodes[1] + '_line2'"
@@ -95,8 +98,9 @@
                 :y1="getY1(connection)"
                 :x2="getX2(connection)"
                 :y2="getY2(connection)"
-                stroke-width="9"
-                stroke="gray"
+                stroke-width="5"
+                :stroke="ink.road"
+                stroke-linecap="round"
             />
         </template>
 
@@ -115,9 +119,9 @@
                     :width="46 * t"
                     :height="46 * t"
                     :rx="7 * t"
-                    fill="gray"
-                    :stroke="city.region"
-                    :stroke-width="4 * t"
+                    :fill="ink.city"
+                    :stroke="regionColor(city.region)"
+                    :stroke-width="5 * t"
                     :transform="`rotate(45, ${city.x}, ${city.y})`"
                     @click="onCityClick(city)"
                 >
@@ -132,8 +136,8 @@
                         :width="13 * t"
                         :height="13 * t"
                         :rx="1 * t"
-                        fill="gray"
-                        stroke="black"
+                        :fill="ink.slot"
+                        :stroke="ink.outline"
                         :stroke-width="1 * t"
                         :transform="`rotate(45, ${city.x + nodeSlotPos(i).dx}, ${city.y + nodeSlotPos(i).dy})`"
                     />
@@ -210,38 +214,36 @@
                 r="20"
                 :cx="city.x"
                 :cy="city.y"
-                fill="gray"
+                :fill="ink.city"
+                :stroke="ink.outline"
+                stroke-width="1.5"
                 @click="onCityClick(city)"
             >
                 <title>{{ city.name }}</title>
             </circle>
         </template>
 
+        <!-- Cost tiers read by lightness and size, not hue: white up to 10,
+             light slate to 15, dark above. -->
         <template v-for="connection in connections">
             <circle
                 v-if="connection.cost > 0"
-                :key="connection.nodes[0] + '_' + connection.nodes[1] + '_border'"
-                stroke="black"
-                :r="10 + (connection.cost * 10) / 28"
+                :key="connection.nodes[0] + '_' + connection.nodes[1] + '_cost'"
+                :class="['connection-cost', 'cost-' + costTier(connection.cost)]"
+                :r="9 + (connection.cost * 6) / 28"
                 :cx="(getX1(connection) + getX2(connection)) / 2"
                 :cy="(getY1(connection) + getY2(connection)) / 2"
-                :fill="connection.cost > 15 ? 'gold' : connection.cost > 10 ? 'lightgray' : 'tan'"
-            />
-            <circle
-                v-if="connection.cost > 0"
-                :key="connection.nodes[0] + '_' + connection.nodes[1] + '_circle'"
-                :r="6 + (connection.cost * 10) / 28"
-                :cx="(getX1(connection) + getX2(connection)) / 2"
-                :cy="(getY1(connection) + getY2(connection)) / 2"
-                fill="gray"
-                stroke="black"
+                :fill="costFill(connection.cost)"
+                :stroke="ink.outline"
+                :stroke-width="costTier(connection.cost) === 'high' ? 1 : 1.5"
             />
             <text
                 v-if="connection.cost > 0"
                 :key="connection.nodes[0] + '_' + connection.nodes[1] + '_text'"
                 text-anchor="middle"
-                :style="`font-size: ${12 + (connection.cost * 6) / 28}px`"
-                fill="black"
+                font-weight="700"
+                :style="`font-size: ${11 + (connection.cost * 5) / 28}px`"
+                :fill="costTier(connection.cost) === 'high' ? '#ffffff' : ink.outline"
                 :x="(getX1(connection) + getX2(connection)) / 2"
                 :y="(getY1(connection) + getY2(connection)) / 2"
                 :transform="
@@ -276,18 +278,10 @@
                 <circle
                     :cx="city.x"
                     :cy="city.y + 15 * t"
-                    :r="11 * t"
-                    fill="goldenrod"
-                    stroke="darkgoldenrod"
-                    :stroke-width="2 * t"
-                />
-                <circle
-                    :cx="city.x"
-                    :cy="city.y + 15 * t"
-                    :r="7.5 * t"
-                    fill="gray"
-                    stroke="darkgoldenrod"
-                    :stroke-width="1 * t"
+                    :r="10 * t"
+                    :fill="ink.costLow"
+                    :stroke="ink.outline"
+                    :stroke-width="1.5 * t"
                 />
                 <text
                     :x="city.x"
@@ -400,8 +394,9 @@
                 :cx="city.x"
                 :cy="city.y"
                 fill="none"
-                stroke="gold"
-                stroke-width="5px"
+                :stroke="ink.outline"
+                stroke-width="4px"
+                stroke-dasharray="6 4"
                 @click="onCityClick(city)"
             />
         </template>
@@ -469,13 +464,13 @@
                 <path d="M1,2 l4,-2 l6,0 l4,2 l0,11 l-4,2 l-6,0 l-4,-2Z" fill="#ef3b3b" />
             </g>
             <!-- prohibition sign over it, tinted with the region's own colour -->
-            <circle cx="0" cy="0" r="20" fill="none" :stroke="marker.region" stroke-width="4.5" />
+            <circle cx="0" cy="0" r="20" fill="none" :stroke="regionColor(marker.region)" stroke-width="4.5" />
             <line
                 x1="-14.1"
                 y1="-14.1"
                 x2="14.1"
                 y2="14.1"
-                :stroke="marker.region"
+                :stroke="regionColor(marker.region)"
                 stroke-width="4.5"
                 stroke-linecap="round"
             />
@@ -504,6 +499,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { House } from '../pieces';
 import { Piece, Preferences } from '../../types/ui-data';
 import { City, Connection, Polygon } from 'powergrid-engine/src/maps';
+import { mapInk, regionColor } from '../../map-colors';
 
 /** The gray disc a city is drawn as, and the tap target it has always had. */
 const CITY_RADIUS = 20;
@@ -545,6 +541,17 @@ export default class Map extends Vue {
     houses: Piece[] = [];
     /** Node-weighted tile scale, exposed to the template. */
     t = TILE_SCALE;
+    ink = mapInk;
+    regionColor = regionColor;
+
+    costTier(cost: number) {
+        return cost > 15 ? 'high' : cost > 10 ? 'mid' : 'low';
+    }
+
+    costFill(cost: number) {
+        const tier = this.costTier(cost);
+        return tier === 'high' ? mapInk.costHigh : tier === 'mid' ? mapInk.costMid : mapInk.costLow;
+    }
 
     get regionBorderCities() {
         return (this.cities || []).filter(city => city.connectionCost == null || (city.slotCosts && city.slotCosts.length >= 2));

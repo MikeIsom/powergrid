@@ -69,7 +69,7 @@
                                     :cy="city.y"
                                     r="23"
                                     fill="#b5beb1"
-                                    :stroke="city.region"
+                                    :stroke="regionColor(city.region)"
                                     stroke-width="5"
                                 />
                                 <rect
@@ -81,7 +81,7 @@
                                     rx="5"
                                     :transform="`rotate(45, ${city.x}, ${city.y})`"
                                     fill="#b5beb1"
-                                    :stroke="city.region"
+                                    :stroke="regionColor(city.region)"
                                     stroke-width="4"
                                 />
                             </g>
@@ -902,6 +902,7 @@
 <script lang="ts">
 import { isEqual } from 'lodash';
 import { resolvePlayerColors, colorText, seatColor, seatColorLabels } from '../player-colors';
+import { regionColor } from '../map-colors';
 import InlineLog from './InlineLog.vue';
 import { Vue, Component, Prop, Watch, Provide, ProvideReactive, Ref } from 'vue-property-decorator';
 import { MoveName, ended, playersSortedByScore, reconstructState } from 'powergrid-engine';
@@ -1191,6 +1192,7 @@ export default class Game extends Vue {
     colorText = colorText;
     seatColor = seatColor;
     seatColorLabels = seatColorLabels;
+    regionColor = regionColor;
 
     defaultPlayerColors = ['limegreen', 'mediumorchid', 'red', 'dodgerblue', 'yellow', 'brown'];
 

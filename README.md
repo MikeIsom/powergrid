@@ -1,3 +1,3 @@
 # Power Grid viewer build
 
-Built from `new-viewer-palette` @ d6d6c80. Load `powergrid-viewer.umd.min.js` (styles in `powergrid-viewer.css`); the locale and geography chunks load relative to it.
+Built from `new-viewer-palette` @ 19b60ca. Load `powergrid-viewer.umd.min.js`; it links `powergrid-viewer.css` beside it, and the locale and geography chunks load relative to it.

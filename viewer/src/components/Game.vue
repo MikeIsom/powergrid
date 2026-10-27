@@ -181,6 +181,7 @@
                     :nextCardWeak="G.nextCardWeak"
                     :plantDiscountActive="G.plantDiscountActive"
                     :reserveLayout="!stacked"
+                    :hideCalculator="showAuctionDock"
                     :futureMarketRows="G.map.name === 'Europe' ? 2 : 1"
                     @choosePowerPlant="choosePowerPlant($event)"
                     @bid="bid($event)"
@@ -577,6 +578,26 @@
             </g>
         </svg>
 
+        <AuctionDock
+            v-if="showAuctionDock"
+            :plant="G.chosenPowerPlant"
+            :currentBid="G.currentBid"
+            :openingBid="G.minimunBid"
+            :leader="auctionLeader"
+            :canBid="canBid()"
+            :canChoose="canChoose()"
+            :canPass="canUsePhaseButton"
+            :passLabel="phaseButtonText"
+            :minBid="changingBid ? revisionBids[0] : G.currentBid + 1 || G.minimunBid"
+            :maxBid="G.players[player] ? G.players[player].money : 0"
+            :initialBid="changingBid ? replacementBid : undefined"
+            :market="auctionMarket"
+            :resetKey="`${G.chosenPowerPlant ? G.chosenPowerPlant.number : ''}-${changingBid}-${draftKey}`"
+            @bid="bid($event)"
+            @choose="choosePowerPlant($event)"
+            @pass="usePhaseButton()"
+        />
+
         <div class="chat-tabs-host"></div>
         <div class="journal-and-chat">
             <InlineLog v-if="G" :entries="logReversed.slice().reverse()" :state="G" />
@@ -930,6 +951,7 @@ import {
 import PlayerBoard from './PlayerBoard.vue';
 import Calculator from './Calculator.vue';
 import PowerPlantMarket from './boards/PowerPlantMarket.vue';
+import AuctionDock from './AuctionDock.vue';
 import PlayerOrder from './boards/PlayerOrder.vue';
 import CityCount from './boards/CityCount.vue';
 import Map from './boards/Map.vue';
@@ -1103,6 +1125,7 @@ let nextGeographyClipId = 0;
         Calculator,
         RoundPlanner,
         PowerPlantMarket,
+        AuctionDock,
         PlayerOrder,
         CityCount,
         Map,
@@ -1357,6 +1380,28 @@ export default class Game extends Vue {
     get canUsePhaseButton(): boolean {
         if (this.changingBid) return this.player !== this.G!.auctioningPlayer;
         return !!this.revisableBid || this.canChangePowering || this.canPass();
+    }
+    // Phones get the auction as a bottom sheet; desktop keeps the in-board calculator.
+    get showAuctionDock(): boolean {
+        if (!this.stacked || !this.G || this.roundPlan || this.tutorialMove) return false;
+        if (this.G.phase !== Phase.Auction) return false;
+        return !!this.G.chosenPowerPlant || this.canChoose();
+    }
+    get auctionLeader() {
+        const bid = this.G?.currentBid;
+        if (!bid) return undefined;
+        const leader = this.G!.players.find((p) => p.bid === bid);
+        if (!leader) return undefined;
+        const color = this.playerColors[leader.id];
+        return { name: leader.name, color, text: colorText(color) };
+    }
+    get auctionMarket() {
+        const choosable = this.getChooseablePowerPlants() || [];
+        return this.G!.actualMarket.map((plant, i) => ({
+            plant,
+            choosable: choosable.includes(plant.number),
+            discount: !!this.G!.plantDiscountActive && i === 0,
+        }));
     }
     get phaseButtonText(): string {
         if (this.changingBid) return 'Pass bid';

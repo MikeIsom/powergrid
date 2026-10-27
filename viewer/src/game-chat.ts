@@ -89,7 +89,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
         if (shortcut.hidden) return;
         const box = shortcut.getBoundingClientRect();
         let top = box.top;
-        const controls = Array.from(host.querySelectorAll('#scene g.button'))
+        const controls = Array.from(host.querySelectorAll('#scene g.button, .auction-dock'))
             .map((control) => control.getBoundingClientRect())
             .filter((control) => control.left < box.right && control.right > box.left)
             .sort((a, b) => b.top - a.top);

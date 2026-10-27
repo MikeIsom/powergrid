@@ -39,8 +39,12 @@
             <!-- Keyed per plant so every auction gets a fresh calculator: a reused
                  instance would keep displaying the previous auction's bid floor. The
                  draft key also resets a bid dialled before the game was rewound. -->
+            <!-- Hidden, not removed, while the phone auction sheet has the controls:
+                 the portrait layout measures this slot and must not reflow per turn. -->
             <Calculator
                 v-if="canBid"
+                :visibility="hideCalculator ? 'hidden' : undefined"
+                :pointer-events="hideCalculator ? 'none' : undefined"
                 :key="'calc' + chosenPowerPlant.powerPlant.number + (editingBid ? '-edit' : '') + '-' + draftKey"
                 :transform="`translate(${actualMarketWidth}, 80)`"
                 :minValue="minBid"
@@ -108,6 +112,7 @@ export default class PowerPlantMarket extends Vue {
     @Prop() initialBid?: number;
     @Prop() editingBid?: boolean;
     @Prop({ default: 0 }) draftKey!: number;
+    @Prop({ default: false }) hideCalculator!: boolean;
 
     @Inject() preferences!: Preferences;
 

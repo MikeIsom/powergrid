@@ -53,13 +53,13 @@ export default class BoardOption extends Vue {
 </script>
 <style scoped>
 .board-option {
-    color: #253221;
+    color: #1f2a36;
 }
 .option-background {
-    fill: gainsboro;
+    fill: #e4e9ef;
 }
 .active .option-background {
-    fill: #203a45;
+    fill: #1f2a36;
 }
 .active {
     color: white;

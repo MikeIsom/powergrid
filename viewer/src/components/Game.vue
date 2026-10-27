@@ -59,7 +59,7 @@
                                 :y1="link.from.y"
                                 :x2="link.to.x"
                                 :y2="link.to.y"
-                                stroke="#59675c"
+                                stroke="#7d8894"
                                 stroke-width="7"
                             />
                             <g v-for="city in unselectedNetwork.cities" :key="'inactive-' + city.name">
@@ -68,7 +68,7 @@
                                     :cx="city.x"
                                     :cy="city.y"
                                     r="23"
-                                    fill="#b5beb1"
+                                    fill="#c3ccd7"
                                     :stroke="regionColor(city.region)"
                                     stroke-width="5"
                                 />
@@ -80,7 +80,7 @@
                                     height="40"
                                     rx="5"
                                     :transform="`rotate(45, ${city.x}, ${city.y})`"
-                                    fill="#b5beb1"
+                                    fill="#c3ccd7"
                                     :stroke="regionColor(city.region)"
                                     stroke-width="4"
                                 />
@@ -307,7 +307,7 @@
                 data-board-slot="uraniumMines"
                 :transform="slotT('uraniumMines') || 'translate(15, 112)'"
             >
-                <rect x="0" y="0" width="620" height="104" rx="6" fill="#8aa84a" stroke="#4d6322" stroke-width="3" />
+                <rect x="0" y="0" width="620" height="104" rx="6" fill="#e4eaf1" stroke="#5b6b7f" stroke-width="3" />
                 <text x="310" y="26" text-anchor="middle" font-weight="700" fill="black" style="font-size: 22px">
                     Uranium mine market
                 </text>
@@ -329,7 +329,7 @@
                         height="26"
                         rx="3"
                         fill="#4a5a6e"
-                        stroke="#4d6322"
+                        stroke="#5b6b7f"
                         stroke-width="1.5"
                     />
                     <rect
@@ -339,7 +339,7 @@
                         height="26"
                         rx="3"
                         fill="#4a5a6e"
-                        stroke="#4d6322"
+                        stroke="#5b6b7f"
                         stroke-width="1.5"
                     />
                     <Uranium
@@ -366,7 +366,7 @@
                 data-board-slot="uraniumMines"
                 :transform="slotT('uraniumMines') || 'translate(15, 112)'"
             >
-                <rect x="0" y="0" width="104" height="396" rx="6" fill="#8aa84a" stroke="#4d6322" stroke-width="3" />
+                <rect x="0" y="0" width="104" height="396" rx="6" fill="#e4eaf1" stroke="#5b6b7f" stroke-width="3" />
                 <text x="52" y="22" text-anchor="middle" font-weight="700" fill="black" style="font-size: 15px">
                     Uranium
                 </text>
@@ -384,7 +384,7 @@
                         height="26"
                         rx="3"
                         fill="#4a5a6e"
-                        stroke="#4d6322"
+                        stroke="#5b6b7f"
                         stroke-width="1.5"
                     />
                     <rect
@@ -394,7 +394,7 @@
                         height="26"
                         rx="3"
                         fill="#4a5a6e"
-                        stroke="#4d6322"
+                        stroke="#5b6b7f"
                         stroke-width="1.5"
                     />
                     <Uranium
@@ -2873,7 +2873,16 @@ export default class Game extends Vue {
             logReversed.reverse();
         }
 
-        return logReversed;
+        // The engine writes seat colour names and a fixed money green into the journal
+        // HTML; draw them in the viewer's palette so they stay readable in both themes.
+        return logReversed.map((html) =>
+            html
+                ?.replace(/background-color: ([a-z]+);/g, (_, name: string) => {
+                    const color = seatColor(name);
+                    return `background-color: ${color}; color: ${colorText(color)};`;
+                })
+                .replace(/style="color: green"/g, 'style="color: var(--pg-money)"')
+        );
     }
 
     get logReversedSimple() {
@@ -3357,7 +3366,7 @@ ul {
     gap: 0 12px;
     padding: 0 10px;
     color: white;
-    background: black;
+    background: var(--pg-strong);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -3376,10 +3385,11 @@ ul {
     box-sizing: border-box;
     padding: 0 10px;
     width: 100%;
-    background-color: black;
+    background-color: var(--pg-strong);
     color: #fff;
     text-align: center;
     line-height: 1.3;
+    font-family: Arial, sans-serif;
     font-size: 20px;
     position: sticky;
     top: 0;
@@ -3433,24 +3443,49 @@ ul {
     }
 }
 
+// Slate theme shared by the journal, chat, dialogs and controls.
 html {
-    --powergrid-page-background: #e7ebda;
+    --powergrid-page-background: #e6eaef;
+    --pg-panel: #f6f8fa;
+    --pg-panel-alt: #e4e9ef;
+    --pg-border: #b8c4d2;
+    --pg-ink: #1f2a36;
+    --pg-ink-muted: #5b6b7f;
+    --pg-strong: #1f2a36;
+    --pg-strong-hover: #2f3b4a;
+    --pg-accent: #0072b2;
+    --pg-highlight: #e69f00;
+    --pg-money: #117733;
 }
 
 html[data-powergrid-theme='dark'] {
     --powergrid-page-background: #171717;
+    --pg-panel: #222a33;
+    --pg-panel-alt: #2c3541;
+    --pg-border: #3f4c5c;
+    --pg-ink: #e6ecf2;
+    --pg-ink-muted: #9aa8b8;
+    --pg-accent: #56b4e9;
+    --pg-money: #5cc98a;
 }
 
 @media (prefers-color-scheme: dark) {
     html:not([data-powergrid-theme]) {
         --powergrid-page-background: #171717;
+        --pg-panel: #222a33;
+        --pg-panel-alt: #2c3541;
+        --pg-border: #3f4c5c;
+        --pg-ink: #e6ecf2;
+        --pg-ink-muted: #9aa8b8;
+        --pg-accent: #56b4e9;
+        --pg-money: #5cc98a;
     }
 }
 
 body,
 html {
     background: var(--powergrid-page-background);
-    color: #263521;
+    color: var(--pg-ink);
     height: 100%;
     width: 100%;
     margin: 0;
@@ -3476,7 +3511,7 @@ text {
 
     &.highlightButton {
         rect {
-            stroke: blue;
+            stroke: var(--pg-accent);
             stroke-width: 4px;
         }
     }
@@ -3486,13 +3521,13 @@ text {
 
         &:hover {
             rect {
-                fill: silver;
-                stroke: white;
+                fill: var(--pg-strong-hover);
+                stroke: var(--pg-strong-hover);
             }
 
             circle {
-                fill: silver;
-                stroke: white;
+                fill: var(--pg-strong-hover);
+                stroke: var(--pg-strong-hover);
             }
 
             line {
@@ -3511,15 +3546,15 @@ text {
 
     &:not(.enabled) {
         rect {
-            stroke: silver;
+            stroke: #a9b6c5;
         }
 
         circle {
-            stroke: silver;
+            stroke: #a9b6c5;
         }
 
         line {
-            stroke: silver;
+            stroke: #a9b6c5;
         }
 
         image {
@@ -3527,7 +3562,7 @@ text {
         }
 
         text {
-            fill: silver;
+            fill: #a9b6c5;
         }
     }
 }
@@ -3547,7 +3582,7 @@ text {
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    background-color: rgba(15, 22, 30, 0.55);
 
     &.visible {
         display: block;
@@ -3555,11 +3590,14 @@ text {
 }
 
 .modal-content {
-    border-radius: 5px;
-    background-color: #fefefe;
+    border-radius: 10px;
+    background-color: var(--pg-panel);
+    color: var(--pg-ink);
     margin: auto;
     padding: 10px 20px 20px 20px;
-    border: 1px solid #888;
+    border: 1px solid var(--pg-border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    font-family: Arial, sans-serif;
     box-sizing: border-box;
     max-width: 100%;
 }
@@ -3581,11 +3619,11 @@ text {
     padding: 5px;
 
     &:nth-last-child(even) {
-        background: #ccc;
+        background: var(--pg-panel-alt);
     }
 
     &:nth-last-child(odd) {
-        background: #fff;
+        background: var(--pg-panel);
     }
 }
 
@@ -3597,7 +3635,7 @@ text {
 }
 
 .close {
-    color: #aaaaaa;
+    color: var(--pg-ink-muted);
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -3605,7 +3643,7 @@ text {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: var(--pg-ink);
     text-decoration: none;
     cursor: pointer;
 }
@@ -3630,12 +3668,12 @@ text {
 }
 
 .payment-table {
-    border: 1px solid black;
+    border: 1px solid var(--pg-border);
     margin: 5px auto;
 
     tr {
         td {
-            border: 1px solid black;
+            border: 1px solid var(--pg-border);
             text-align: center;
             padding: 0 10px 0 10px;
         }
@@ -3645,12 +3683,12 @@ text {
 .final-score-table,
 .spending-table {
     margin: auto;
-    border: 1px solid black;
+    border: 1px solid var(--pg-border);
 
     tr {
         td,
         th {
-            border: 1px solid black;
+            border: 1px solid var(--pg-border);
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -3665,7 +3703,7 @@ text {
         th:first-child {
             position: sticky;
             left: 0;
-            background-color: #fefefe;
+            background-color: var(--pg-panel);
             box-shadow: 2px 0 3px -1px rgba(0, 0, 0, 0.3);
 
             div {
@@ -3725,6 +3763,28 @@ text {
 
 .confirm-button {
     margin: 15px 0 0 15px;
+    min-height: 40px;
+    padding: 8px 18px;
+    border: 1px solid var(--pg-strong);
+    border-radius: 6px;
+    background: var(--pg-strong);
+    color: #fff;
+    font: 600 16px Arial, sans-serif;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: var(--pg-strong-hover);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--pg-accent);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
 }
 </style>
 

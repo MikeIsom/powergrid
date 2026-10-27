@@ -93,10 +93,10 @@ export default class InlineLog extends Vue {
     box-sizing: border-box;
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid #a2aa82;
-    border-radius: 3px;
-    background: #f3f0dc;
-    color: #263521;
+    border: 1px solid var(--pg-border);
+    border-radius: 8px;
+    background: var(--pg-panel);
+    color: var(--pg-ink);
     font: 14px Arial, sans-serif;
 }
 summary {

@@ -67,11 +67,11 @@
                     width="18"
                     height="18"
                     rx="2"
-                    :fill="autoPass ? '#304b3b' : '#f5f4e5'"
-                    stroke="#304b3b"
+                    :fill="autoPass ? '#1f2a36' : '#ffffff'"
+                    stroke="#1f2a36"
                 />
                 <path v-if="autoPass" d="M14 18L18 22L24 14" fill="none" stroke="white" stroke-width="2" />
-                <text x="37" y="18" fill="#24382b" style="font: 16px Arial, sans-serif; dominant-baseline: central"
+                <text x="37" y="18" fill="#1f2a36" style="font: 16px Arial, sans-serif; dominant-baseline: central"
                     >Auto-pass if unaffordable</text
                 >
                 <title>

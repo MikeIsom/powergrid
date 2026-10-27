@@ -10,7 +10,7 @@
         @keydown.enter.prevent="enabled && $emit('click')"
         @keydown.space.prevent="enabled && $emit('click')"
     >
-        <rect width="80" height="26" fill="gainsboro" stroke="black" rx="2" />
+        <rect width="80" height="26" fill="#e9edf2" stroke="#1f2a36" rx="5" />
         <image
             v-if="icon === 'undo'"
             x="30"

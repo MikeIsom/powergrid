@@ -1,6 +1,6 @@
 <template>
     <g class="button enabled" @click="$emit('click')">
-        <circle cx="15" cy="15" r="15" fill="gainsboro" stroke="black" stroke-width="2px" />
+        <circle cx="15" cy="15" r="15" fill="#e9edf2" stroke="#1f2a36" stroke-width="2px" />
         <image x="5" y="5" width="20" height="20" href="../../icons/rules.svg" />
         <title>Rules</title>
     </g>

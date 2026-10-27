@@ -1,6 +1,6 @@
 <template>
     <g :class="['button', { enabled }]" @click="enabled && $emit('click')">
-        <rect :width="width" height="30" fill="gainsboro" stroke="black" rx="2" />
+        <rect :width="width" height="30" fill="#e9edf2" stroke="#1f2a36" rx="5" />
         <text text-anchor="middle" fill="black" :x="width / 2" y="16">{{ getText() }}</text>
         <title>{{ text }}</title>
     </g>

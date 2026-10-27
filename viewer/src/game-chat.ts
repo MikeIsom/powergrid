@@ -11,10 +11,10 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     if (!slot.parentElement) host.insertAdjacentElement('afterend', slot);
     const style = document.createElement('style');
     style.textContent = `
-.bgs-game-chat{box-sizing:border-box;font:14px/1.4 Arial,sans-serif;border:1px solid #a2aa82;border-radius:3px;margin:8px 0;padding:8px 12px;background:#f3f0dc;color:#263521}
+.bgs-game-chat{box-sizing:border-box;font:14px/1.4 Arial,sans-serif;border:1px solid var(--pg-border);border-radius:8px;margin:8px 0;padding:8px 12px;background:var(--pg-panel);color:var(--pg-ink)}
 .bgs-game-chat summary{cursor:pointer;font-weight:650;border-radius:3px;width:fit-content;padding:2px 4px;margin:-2px -4px}
-.bgs-game-chat summary:hover{color:#126778}
-.bgs-game-chat summary:focus-visible,.bgs-game-chat button:focus-visible{outline:2px solid #247d8c;outline-offset:3px}
+.bgs-game-chat summary:hover{color:var(--pg-accent)}
+.bgs-game-chat summary:focus-visible,.bgs-game-chat button:focus-visible{outline:2px solid var(--pg-accent);outline-offset:3px}
 .bgs-game-chat .chat-day{display:flex;align-items:center;gap:8px;margin:12px 0 6px;font-size:.85em;opacity:.8}
 .bgs-game-chat .chat-day::before,.bgs-game-chat .chat-day::after{content:"";flex:1;border-top:1px solid currentColor;opacity:.3}
 .bgs-game-chat .chat-day time{margin:0;color:inherit;font-size:inherit}
@@ -22,14 +22,14 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat article{padding:5px 0;border-bottom:1px solid #75818d26;white-space:pre-wrap;overflow-wrap:anywhere}
 .bgs-game-chat article strong{padding:0 3px;font-weight:bold}
 .bgs-game-chat article:last-child{border-bottom:0}
-.bgs-game-chat time{font-size:12px;color:#536e77;margin-left:8px;white-space:nowrap}
+.bgs-game-chat time{font-size:12px;color:var(--pg-ink-muted);margin-left:8px;white-space:nowrap}
 .bgs-game-chat .chat-composer{display:flex;gap:6px;align-items:center;margin:0}
-.bgs-game-chat input{flex:1;min-width:0;box-sizing:border-box;height:30px;background:#f3f5eb;color:#263521;border:1px solid #899997;border-radius:2px;padding:4px 7px;font:14px Arial,sans-serif}
-.bgs-game-chat input::placeholder{color:#637477}
-.bgs-game-chat input:focus{outline:2px solid #527f89;outline-offset:1px}
-.bgs-game-chat button{box-sizing:border-box;height:30px;cursor:pointer;border:1px solid #7f8c8d;border-radius:3px;background:#dddeda;color:#172d34;padding:3px 12px;font:14px Arial,sans-serif}
-.bgs-game-chat button:hover:not(:disabled){background:#c8d3d0}
-.bgs-game-chat button:disabled{color:#788786;border-color:#b0bcb8;background:#dce3df;cursor:default}
+.bgs-game-chat input{flex:1;min-width:0;box-sizing:border-box;height:30px;background:var(--pg-panel);color:var(--pg-ink);border:1px solid var(--pg-border);border-radius:2px;padding:4px 7px;font:14px Arial,sans-serif}
+.bgs-game-chat input::placeholder{color:var(--pg-ink-muted)}
+.bgs-game-chat input:focus{outline:2px solid var(--pg-accent);outline-offset:1px}
+.bgs-game-chat button{box-sizing:border-box;height:30px;cursor:pointer;border:1px solid var(--pg-border);border-radius:6px;background:var(--pg-panel-alt);color:var(--pg-ink);padding:3px 12px;font:14px Arial,sans-serif}
+.bgs-game-chat button:hover:not(:disabled){background:var(--pg-border)}
+.bgs-game-chat button:disabled{color:var(--pg-ink-muted);border-color:var(--pg-border);background:var(--pg-panel-alt);opacity:.6;cursor:default}
 .bgs-game-chat .chat-mention{height:auto;padding:0 2px;border:0;background:transparent;color:inherit;font:inherit;font-weight:bold;text-decoration:underline}
 .bgs-game-chat article a{color:inherit;text-decoration:underline}
 .bgs-game-chat .chat-translate{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:24px;height:24px;min-height:0;padding:4px;margin-left:3px;border:0;background:transparent;color:inherit;opacity:.55}
@@ -42,25 +42,25 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat .chat-edit[aria-busy="true"]{background:transparent;cursor:wait}
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chat-suggestions:empty{display:none}
-.chat-suggestions button[aria-pressed="true"]{outline:2px solid #527f89}
+.chat-suggestions button[aria-pressed="true"]{outline:2px solid var(--pg-accent)}
 .bgs-game-chat .chat-editing{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;opacity:.85;padding:3px 0;flex-shrink:0}
 .bgs-game-chat .chat-editing[hidden]{display:none}
 .bgs-game-chat .chat-edit-cancel{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:0;padding:0;border:0;background:transparent;color:inherit;cursor:pointer}
 .bgs-game-chat .chat-status{font-size:12px;margin-top:6px}
 .bgs-game-chat .chat-status:empty{display:none}
-.chat-shortcut{position:fixed;right:89px;bottom:max(17px,env(safe-area-inset-bottom));z-index:900;display:inline-flex;align-items:center;gap:7px;box-sizing:border-box;height:40px;padding:0 10px 0 13px;border:1px solid #6a8589;border-radius:20px;background:#263521;color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 2px 6px #0003}
+.chat-shortcut{position:fixed;right:89px;bottom:max(17px,env(safe-area-inset-bottom));z-index:900;display:inline-flex;align-items:center;gap:7px;box-sizing:border-box;height:40px;padding:0 10px 0 13px;border:1px solid var(--pg-strong-hover);border-radius:20px;background:var(--pg-strong);color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 2px 6px #0003}
 .chat-shortcut[hidden]{display:none}
 .chat-shortcut svg{flex:none}
-.chat-shortcut-count{box-sizing:border-box;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#f2c230;color:#172d34;font:700 12px/22px Arial,sans-serif;text-align:center}
+.chat-shortcut-count{box-sizing:border-box;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--pg-highlight);color:#172d34;font:700 12px/22px Arial,sans-serif;text-align:center}
 .game-feed-tabs{display:none}
 @media(max-width:700px){
 .game-feed-tabs{display:flex;gap:4px;margin-top:8px}
-.game-feed-tabs button{border:1px solid #a2aa82;border-radius:3px 3px 0 0;padding:7px 14px;background:#e7ead7;color:#263521;font:600 14px Arial,sans-serif;cursor:pointer}
-.game-feed-tabs button[aria-pressed="true"]{background:#f3f0dc;border-bottom:3px solid #526f32}
-.game-feed-tabs button:focus-visible{outline:2px solid #247d8c;outline-offset:2px}
+.game-feed-tabs button{border:1px solid var(--pg-border);border-radius:3px 3px 0 0;padding:7px 14px;background:var(--pg-panel-alt);color:var(--pg-ink);font:600 14px Arial,sans-serif;cursor:pointer}
+.game-feed-tabs button[aria-pressed="true"]{background:var(--pg-panel);border-bottom:3px solid var(--pg-accent)}
+.game-feed-tabs button:focus-visible{outline:2px solid var(--pg-accent);outline-offset:2px}
 .journal-and-chat[data-feed="chat"]>.inline-game-log,.journal-and-chat[data-feed="journal"]>.chat-host{display:none}
 }
-.chat-shortcut:hover{background:#315966}
+.chat-shortcut:hover{background:var(--pg-strong-hover)}
 .chat-shortcut:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 `;

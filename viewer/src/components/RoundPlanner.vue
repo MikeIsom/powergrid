@@ -66,14 +66,14 @@ export default Vue.extend({
     flex-wrap: wrap;
     padding: 5px 10px 5px 0;
     font: 14px Arial, sans-serif;
-    color: #f0f2e9;
+    color: #eef2f6;
 }
 p {
     margin: 6px 0;
 }
 button {
     font: inherit;
-    border: 1px solid #68725f;
+    border: 1px solid #5b6b7f;
     border-radius: 3px;
     background: transparent;
     color: inherit;
@@ -81,20 +81,20 @@ button {
     cursor: pointer;
 }
 button:hover {
-    background: #35412b;
+    background: #2f3b4a;
 }
 button:disabled {
     opacity: 0.45;
     cursor: default;
 }
 .primary {
-    background: #9acd32;
-    color: #182007;
-    border-color: #9acd32;
+    background: #56b4e9;
+    color: #0b1a26;
+    border-color: #56b4e9;
     font-weight: 600;
 }
 .primary:hover {
-    background: #b0df52;
+    background: #7cc6ee;
 }
 .round-planner > p {
     flex-basis: 100%;
@@ -103,11 +103,11 @@ button:disabled {
     font: 13px Arial, sans-serif;
 }
 .muted {
-    color: #bcc7ad;
+    color: #a9b6c5;
     font-size: 13px;
 }
 button:focus-visible {
-    outline: 2px solid #d7ed95;
+    outline: 2px solid #56b4e9;
     outline-offset: 2px;
 }
 .queue-hint {

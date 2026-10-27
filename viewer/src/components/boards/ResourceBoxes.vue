@@ -25,17 +25,28 @@
                     <rect width="374" height="110" fill="transparent" pointer-events="all" />
                     <path
                         :d="isExpanded(row) ? 'M9 1H374V110H1V9Q1 1 9 1Z' : 'M9 1H374V109H9Q1 109 1 101V9Q1 1 9 1Z'"
-                        fill="#8fa3b8"
-                        :stroke="row.buyable ? '#1e63d0' : 'none'"
+                        :fill="row.buyable ? '#ffffff' : '#eef1f5'"
+                        :stroke="row.buyable ? '#0072b2' : 'none'"
                         stroke-width="4"
                     />
+                    <text
+                        v-if="!row.flat && (row.buyable || row.price == null)"
+                        x="20"
+                        y="93"
+                        dominant-baseline="middle"
+                        font-size="19"
+                        font-weight="600"
+                        :fill="row.buyable ? '#0072b2' : '#5b6b7f'"
+                        data-buy-caption
+                        >{{ row.buyable ? 'Tap to buy 1' : 'Sold out' }}</text
+                    >
                     <text
                         v-if="row.flat"
                         x="20"
                         y="28"
                         dominant-baseline="middle"
                         font-weight="700"
-                        fill="#34402a"
+                        fill="#1f2a36"
                         :font-size="row.label.length > 14 ? 22 : 27"
                         >{{ row.label }}</text
                     >
@@ -81,7 +92,6 @@
                     role="button"
                     :tabindex="canUnbuy(row) ? 0 : -1"
                     :aria-disabled="!canUnbuy(row)"
-                    :opacity="canUnbuy(row) ? 1 : 0.35"
                     data-unbuy-resource
                     :data-staged-count="stagedCount(row)"
                     :aria-label="`${row.label}: ${stagedCount(row)} · − take back`"
@@ -104,13 +114,25 @@
                         >
                     </g>
                     <text
+                        v-if="canUnbuy(row)"
                         x="432"
-                        :y="canUnbuy(row) ? 79 : 56"
+                        y="80"
                         text-anchor="middle"
                         dominant-baseline="middle"
-                        :font-size="canUnbuy(row) ? 38 : 48"
-                        fill="#1f2a36"
-                        >↶</text
+                        font-size="20"
+                        font-weight="700"
+                        fill="#0072b2"
+                        >↶ Undo</text
+                    >
+                    <text
+                        v-else
+                        x="432"
+                        y="56"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        font-size="17"
+                        fill="#8796a8"
+                        >None bought</text
                     >
                     <title>{{ row.label }}: {{ stagedCount(row) }} · − take back</title>
                 </g>
@@ -138,24 +160,42 @@
                         </g>
                         <text
                             x="591"
-                            y="31"
+                            y="25"
                             text-anchor="middle"
                             dominant-baseline="middle"
                             font-weight="700"
-                            font-size="32"
-                            fill="#34402a"
+                            font-size="30"
+                            fill="#1f2a36"
                             >{{ row.cubes }}</text
                         >
-                        <g transform="translate(515, 63) scale(1.1)"><ResupplyIcon /></g>
                         <text
                             x="591"
-                            y="79"
+                            y="47"
                             text-anchor="middle"
                             dominant-baseline="middle"
-                            font-weight="600"
-                            font-size="27"
-                            fill="#34402a"
+                            font-size="14"
+                            fill="#5b6b7f"
+                            >in market</text
+                        >
+                        <g transform="translate(515, 62) scale(1.1)"><ResupplyIcon /></g>
+                        <text
+                            x="591"
+                            y="72"
+                            text-anchor="middle"
+                            dominant-baseline="middle"
+                            font-weight="700"
+                            font-size="25"
+                            fill="#1f2a36"
                             >+{{ restockFor(row, currentStep) }}</text
+                        >
+                        <text
+                            x="591"
+                            y="93"
+                            text-anchor="middle"
+                            dominant-baseline="middle"
+                            font-size="14"
+                            fill="#5b6b7f"
+                            >next refill</text
                         >
                     </template>
                     <template v-else>
@@ -167,13 +207,22 @@
                         </g>
                         <text
                             x="591"
-                            y="55"
+                            y="49"
                             text-anchor="middle"
                             dominant-baseline="middle"
                             font-weight="700"
-                            font-size="36"
-                            fill="#34402a"
+                            font-size="34"
+                            fill="#1f2a36"
                             >{{ row.cubes }}</text
+                        >
+                        <text
+                            x="591"
+                            y="76"
+                            text-anchor="middle"
+                            dominant-baseline="middle"
+                            font-size="14"
+                            fill="#5b6b7f"
+                            >available</text
                         >
                     </template>
                     <path
@@ -217,13 +266,13 @@
                             width="106"
                             height="104"
                             rx="5"
-                            :fill="tier.price === row.price ? '#b8c4d2' : '#faefc9'"
+                            :fill="tier.price === row.price ? '#b8c4d2' : '#f6f8fa'"
                             :stroke="
                                 canBuyTier(row, tier.price)
-                                    ? '#1e63d0'
+                                    ? '#0072b2'
                                     : tier.price === row.price
                                     ? '#3f4c5c'
-                                    : '#cbb774'
+                                    : '#b8c4d2'
                             "
                             :stroke-width="tier.price === row.price ? 2 : 1"
                             :stroke-dasharray="tier.capped ? '5 3' : undefined"
@@ -250,7 +299,7 @@
                             text-anchor="end"
                             font-size="21"
                             font-weight="700"
-                            fill="#26351a"
+                            fill="#1f2a36"
                             >+{{ tier.cubes - 2 }}</text
                         >
                     </g>
@@ -281,7 +330,7 @@
                             text-anchor="end"
                             font-size="26"
                             font-weight="600"
-                            fill="#26351a"
+                            fill="#1f2a36"
                             >+{{ restockFor(row, s) }}</text
                         >
                         <line
@@ -368,7 +417,7 @@ export default class ResourceBoxes extends Vue {
     -webkit-user-select: none;
 }
 [role='button']:focus-visible {
-    outline: 3px solid #1e63d0;
+    outline: 3px solid #0072b2;
     outline-offset: 2px;
 }
 </style>

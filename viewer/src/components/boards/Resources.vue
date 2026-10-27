@@ -28,14 +28,14 @@
                     :x="25 + 85 * (index - 1)"
                     y="-95"
                     rx="2"
-                    fill="#2f3b4a"
+                    fill="#dfe5ec"
                 />
                 <circle
                     :key="'north_resourcesCircle' + index"
                     r="10"
                     :cx="92 + 85 * (index - 1)"
                     cy="-92"
-                    fill="#e9edf2"
+                    fill="#1f2a36"
                 />
                 <text
                     :key="'north_resourcesText' + index"
@@ -43,7 +43,7 @@
                     style="font-size: 16px; font-family: monospace"
                     :x="92 + 85 * (index - 1)"
                     y="-92"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     {{ index }}
                 </text>
@@ -149,16 +149,16 @@
                     :x="25 + 85 * (index - 1)"
                     y="45"
                     rx="2"
-                    fill="#2f3b4a"
+                    fill="#dfe5ec"
                 />
-                <circle :key="'resourcesCircle' + index" r="10" :cx="92 + 85 * (index - 1)" cy="48" fill="#e9edf2" />
+                <circle :key="'resourcesCircle' + index" r="10" :cx="92 + 85 * (index - 1)" cy="48" fill="#1f2a36" />
                 <text
                     :key="'resourcesText' + index"
                     text-anchor="middle"
                     style="font-size: 16px; font-family: monospace"
                     :x="92 + 85 * (index - 1)"
                     y="48"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     {{ index }}
                 </text>
@@ -166,16 +166,16 @@
                     :key="'lines' + index"
                     v-if="!isIndiaResourceMarket && !isNinePriceMarket && !isAustraliaMarket && !isBremenMarket"
                 >
-                    <line :x1="25 + 85 * (index - 1)" y1="68" :x2="95 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="25 + 85 * (index - 1)" y1="92" :x2="95 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
+                    <line :x1="25 + 85 * (index - 1)" y1="68" :x2="95 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="25 + 85 * (index - 1)" y1="92" :x2="95 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
 
-                    <line :x1="48 + 85 * (index - 1)" y1="40" :x2="48 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="72 + 85 * (index - 1)" y1="40" :x2="72 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="42 + 85 * (index - 1)" y1="68" :x2="42 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="58 + 85 * (index - 1)" y1="68" :x2="58 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="74 + 85 * (index - 1)" y1="68" :x2="74 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="48 + 85 * (index - 1)" y1="92" :x2="48 + 85 * (index - 1)" y2="120" stroke="#4a5a6e" />
-                    <line :x1="72 + 85 * (index - 1)" y1="92" :x2="72 + 85 * (index - 1)" y2="120" stroke="#4a5a6e" />
+                    <line :x1="48 + 85 * (index - 1)" y1="40" :x2="48 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="72 + 85 * (index - 1)" y1="40" :x2="72 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="42 + 85 * (index - 1)" y1="68" :x2="42 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="58 + 85 * (index - 1)" y1="68" :x2="58 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="74 + 85 * (index - 1)" y1="68" :x2="74 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="48 + 85 * (index - 1)" y1="92" :x2="48 + 85 * (index - 1)" y2="120" stroke="#b8c4d2" />
+                    <line :x1="72 + 85 * (index - 1)" y1="92" :x2="72 + 85 * (index - 1)" y2="120" stroke="#b8c4d2" />
                 </g>
                 <g
                     v-if="isAustraliaMarket"
@@ -183,24 +183,24 @@
                     :transform="`translate(${25 + 85 * (index - 1)}, 45)`"
                     class="resource-slots"
                     fill="none"
-                    stroke="#4a5a6e"
+                    stroke="#b8c4d2"
                     pointer-events="none"
                 >
                     <path d="M0,23 H70 M0,47 H70 M23.333,0 V70 M46.667,0 V70" />
                 </g>
                 <g :key="'lines' + index" v-if="isIndiaResourceMarket">
-                    <line :x1="25 + 85 * (index - 1)" y1="68" :x2="95 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="25 + 85 * (index - 1)" y1="92" :x2="95 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
+                    <line :x1="25 + 85 * (index - 1)" y1="68" :x2="95 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="25 + 85 * (index - 1)" y1="92" :x2="95 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
 
-                    <line :x1="42 + 85 * (index - 1)" y1="40" :x2="42 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="59 + 85 * (index - 1)" y1="40" :x2="59 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="76 + 85 * (index - 1)" y1="40" :x2="76 + 85 * (index - 1)" y2="68" stroke="#4a5a6e" />
-                    <line :x1="42 + 85 * (index - 1)" y1="68" :x2="42 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="58 + 85 * (index - 1)" y1="68" :x2="58 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="74 + 85 * (index - 1)" y1="68" :x2="74 + 85 * (index - 1)" y2="92" stroke="#4a5a6e" />
-                    <line :x1="42 + 85 * (index - 1)" y1="92" :x2="42 + 85 * (index - 1)" y2="120" stroke="#4a5a6e" />
-                    <line :x1="59 + 85 * (index - 1)" y1="92" :x2="59 + 85 * (index - 1)" y2="120" stroke="#4a5a6e" />
-                    <line :x1="76 + 85 * (index - 1)" y1="92" :x2="76 + 85 * (index - 1)" y2="120" stroke="#4a5a6e" />
+                    <line :x1="42 + 85 * (index - 1)" y1="40" :x2="42 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="59 + 85 * (index - 1)" y1="40" :x2="59 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="76 + 85 * (index - 1)" y1="40" :x2="76 + 85 * (index - 1)" y2="68" stroke="#b8c4d2" />
+                    <line :x1="42 + 85 * (index - 1)" y1="68" :x2="42 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="58 + 85 * (index - 1)" y1="68" :x2="58 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="74 + 85 * (index - 1)" y1="68" :x2="74 + 85 * (index - 1)" y2="92" stroke="#b8c4d2" />
+                    <line :x1="42 + 85 * (index - 1)" y1="92" :x2="42 + 85 * (index - 1)" y2="120" stroke="#b8c4d2" />
+                    <line :x1="59 + 85 * (index - 1)" y1="92" :x2="59 + 85 * (index - 1)" y2="120" stroke="#b8c4d2" />
+                    <line :x1="76 + 85 * (index - 1)" y1="92" :x2="76 + 85 * (index - 1)" y2="120" stroke="#b8c4d2" />
                 </g>
             </template>
 
@@ -229,50 +229,50 @@
             </template>
 
             <template v-if="!isIndiaResourceMarket && !isNinePriceMarket && !isAustraliaMarket && !isBremenMarket">
-                <rect width="30" height="30" x="705" y="45" rx="2" fill="#2f3b4a" />
-                <circle r="10" cx="732" cy="48" fill="#e9edf2" />
+                <rect width="30" height="30" x="705" y="45" rx="2" fill="#dfe5ec" />
+                <circle r="10" cx="732" cy="48" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 12px; font-family: monospace"
                     x="732"
                     y="48"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     10
                 </text>
 
-                <rect width="30" height="30" x="745" y="45" rx="2" fill="#2f3b4a" />
-                <circle r="10" cx="772" cy="48" fill="#e9edf2" />
+                <rect width="30" height="30" x="745" y="45" rx="2" fill="#dfe5ec" />
+                <circle r="10" cx="772" cy="48" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 12px; font-family: monospace"
                     x="772"
                     y="48"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     12
                 </text>
 
-                <rect width="30" height="30" x="705" y="85" rx="2" fill="#2f3b4a" />
-                <circle r="10" cx="732" cy="88" fill="#e9edf2" />
+                <rect width="30" height="30" x="705" y="85" rx="2" fill="#dfe5ec" />
+                <circle r="10" cx="732" cy="88" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 12px; font-family: monospace"
                     x="732"
                     y="88"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     14
                 </text>
 
-                <rect width="30" height="30" x="745" y="85" rx="2" fill="#2f3b4a" />
-                <circle r="10" cx="772" cy="88" fill="#e9edf2" />
+                <rect width="30" height="30" x="745" y="85" rx="2" fill="#dfe5ec" />
+                <circle r="10" cx="772" cy="88" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 12px; font-family: monospace"
                     x="772"
                     y="88"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     16
                 </text>
@@ -289,13 +289,13 @@
                     stroke="sandybrown"
                     stroke-width="4px"
                 />
-                <circle r="10" cx="973" cy="45" fill="#e9edf2" />
+                <circle r="10" cx="973" cy="45" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 16px; font-family: monospace"
                     x="973"
                     y="45"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     8
                 </text>
@@ -321,13 +321,13 @@
                     stroke="sandybrown"
                     stroke-width="4px"
                 />
-                <circle r="10" cx="973" cy="45" fill="#e9edf2" />
+                <circle r="10" cx="973" cy="45" fill="#1f2a36" />
                 <text
                     text-anchor="middle"
                     style="font-size: 16px; font-family: monospace"
                     x="973"
                     y="45"
-                    fill="#2f3b4a"
+                    fill="#ffffff"
                 >
                     8
                 </text>
@@ -416,8 +416,8 @@
                     height="90"
                     rx="2"
                     fill="none"
-                    stroke="blue"
-                    stroke-width="2px"
+                    stroke="#0072b2"
+                    stroke-width="3px"
                 />
                 <rect
                     v-if="isKorea && hasBuyableSouth"
@@ -427,8 +427,8 @@
                     height="90"
                     rx="2"
                     fill="none"
-                    stroke="blue"
-                    stroke-width="2px"
+                    stroke="#0072b2"
+                    stroke-width="3px"
                 />
             </template>
         </g>

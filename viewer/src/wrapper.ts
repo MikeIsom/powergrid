@@ -12,7 +12,8 @@ const tutorial = createTutorialLauncher(localizeTutorial(mountTutorial));
 const scriptSrc =
     typeof document !== 'undefined' ? (document.currentScript as HTMLScriptElement | null)?.src : undefined;
 function ensureStylesheet() {
-    if (!scriptSrc || !/powergrid-viewer[^/]*\.js(\?|#|$)/.test(scriptSrc)) return;
+    // Styles already ship inside the script in the inline-CSS build.
+    if (process.env.VUE_APP_INLINE_CSS || !scriptSrc || !/^https?:/.test(scriptSrc)) return;
     const href = new URL('powergrid-viewer.css', scriptSrc).href;
     const loaded = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).some((link) =>
         /powergrid-viewer[^/]*\.css(\?|#|$)/.test(link.href)

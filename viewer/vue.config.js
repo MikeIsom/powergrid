@@ -6,6 +6,9 @@ const protocolDist = dirname(require.resolve('@boardgamers/protocol/viewer'));
 
 module.exports = {
     transpileDependencies: ['@boardgamers/protocol', 'zod'],
+    // VUE_APP_INLINE_CSS=1 bakes the styles into the script, for hosts that load only
+    // a script URL (BGS's custom viewer URL). The default build still extracts the CSS.
+    css: process.env.VUE_APP_INLINE_CSS ? { extract: false } : {},
     devServer: {
         // For gitpod, it needs to be disabled
         disableHostCheck: true,

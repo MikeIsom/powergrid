@@ -365,6 +365,9 @@ export function setup(
     if (chosenMap.name == 'France' && !rulesApply({ version }, 'franceStartingGarbage')) {
         garbageMarket = 6;
     }
+    if (chosenMap.name == 'Brazil' && !rulesApply({ version }, 'brazilStartingBiogas')) {
+        garbageMarket = 6;
+    }
     const uraniumMarket = chosenMap.startingResources ? chosenMap.startingResources[3] : 2;
 
     const totalCoal = chosenMap.startingSupply ? chosenMap.startingSupply[0] : 24;

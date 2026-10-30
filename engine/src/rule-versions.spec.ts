@@ -147,4 +147,9 @@ describe('Rule versions', () => {
         expect(price(13)).to.equal(15);
         expect(price(14)).to.be.undefined;
     });
+
+    it('brazilStartingBiogas: starts Brazil, Recharged, with 9 biogas from version 14', () => {
+        expect(setup(3, { map: 'Brazil', variant: 'recharged', version: 13 }, 'versions').garbageMarket).to.equal(6);
+        expect(setup(3, { map: 'Brazil', variant: 'recharged', version: 14 }, 'versions').garbageMarket).to.equal(9);
+    });
 });

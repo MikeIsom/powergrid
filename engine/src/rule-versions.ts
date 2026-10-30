@@ -23,6 +23,8 @@ export const ruleVersions = {
     stepTwoBeforeStepThree: 14,
     // A first house only goes in an empty city, in every step (F7).
     firstHouseInEmptyCity: 14,
+    // Brazil, Recharged: starts with 9 biogas, not 6 (F9).
+    brazilStartingBiogas: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

@@ -361,7 +361,10 @@ export function setup(
 
     const coalMarket = chosenMap.startingResources ? chosenMap.startingResources[0] : 24;
     const oilMarket = chosenMap.startingResources ? chosenMap.startingResources[1] : 18;
-    const garbageMarket = chosenMap.startingResources ? chosenMap.startingResources[2] : variant == 'original' ? 6 : 9;
+    let garbageMarket = chosenMap.startingResources ? chosenMap.startingResources[2] : variant == 'original' ? 6 : 9;
+    if (chosenMap.name == 'France' && !rulesApply({ version }, 'franceStartingGarbage')) {
+        garbageMarket = 6;
+    }
     const uraniumMarket = chosenMap.startingResources ? chosenMap.startingResources[3] : 2;
 
     const totalCoal = chosenMap.startingSupply ? chosenMap.startingSupply[0] : 24;

@@ -7,6 +7,8 @@ import { GameOptions } from './gamestate';
 export const ruleVersions = {
     // Logs "Starting Step N." for a step change that has no event of its own (9ce6a15).
     stepAnnouncementLog: 13,
+    // France, Recharged: starts with 9 garbage, not 6 (F1).
+    franceStartingGarbage: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

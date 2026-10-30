@@ -28,4 +28,9 @@ describe('Rule versions', () => {
         expect(stepLogs({ version: 13 })).to.equal(1);
         expect(stepLogs({})).to.equal(1);
     });
+
+    it('franceStartingGarbage: starts France, Recharged, with 9 garbage from version 14', () => {
+        expect(setup(3, { map: 'France', variant: 'recharged', version: 13 }, 'versions').garbageMarket).to.equal(6);
+        expect(setup(3, { map: 'France', variant: 'recharged', version: 14 }, 'versions').garbageMarket).to.equal(9);
+    });
 });

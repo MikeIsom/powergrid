@@ -185,4 +185,14 @@ describe('Rule fixes', () => {
         const original = setup(3, { map: 'Brazil', variant: 'original' }, 'f9');
         expect([original.garbageMarket, original.garbageSupply]).to.deep.equal([6, 18]);
     });
+
+    it('F10: removes 0 plug and 5, 6, 3 socket plants on France Recharged at 2, 3, 4 players', () => {
+        // 41 plants without 13, less the removals (plug + socket).
+        const removed: Record<number, number> = { 2: 5, 3: 7, 4: 3, 5: 0, 6: 0 };
+        for (const n of [2, 3, 4, 5, 6]) {
+            const G = setup(n, { map: 'France', variant: 'recharged' }, 'f10');
+            const inGame = G.actualMarket.length + G.futureMarket.length + G.powerPlantsDeck.length - 1;
+            expect(inGame, `${n} players`).to.equal(41 - removed[n]);
+        }
+    });
 });

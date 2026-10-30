@@ -274,8 +274,10 @@ export const map: GameMap = {
             const step3 = powerPlantsDeck.pop()!;
 
             powerPlantsDeck = shuffle(powerPlantsDeck, rng() + '');
+            // maps-france-italy.pdf p.2 only drops the plug removals (none at 2 and 4
+            // players, one at 3); the socket removals stay at 5/6/3 (base-recharged.pdf p.3).
             if (numPlayers == 2) {
-                powerPlantsDeck = shuffle(powerPlantsDeck.slice(6).concat(initialPowerPlants), rng() + '');
+                powerPlantsDeck = shuffle(powerPlantsDeck.slice(5).concat(initialPowerPlants), rng() + '');
             } else if (numPlayers == 3) {
                 initialPowerPlants = initialPowerPlants.slice(1);
                 powerPlantsDeck = shuffle(powerPlantsDeck.slice(6).concat(initialPowerPlants), rng() + '');
@@ -295,7 +297,7 @@ export const map: GameMap = {
         recharged:
             'power plant 13 is removed from the game and ' +
             'power plant 11 always starts in the market. Removal by player count: ' +
-            '2 players remove 6 higher plants, 3 players remove 1 low and 6 higher, ' +
+            '2 players remove 5 higher plants, 3 players remove 1 low and 6 higher, ' +
             '4 players remove 3 higher.',
         original:
             'power plant 13 is removed from the game; power ' + 'plant 11 is placed on top of the deck in its place.',

@@ -57,6 +57,10 @@ export interface GameOptions {
     // alternatePowerPlants in powerPlants.ts) instead of the standard one. Only
     // honoured on the maps in ALTERNATE_DECK_MAPS; ignored everywhere else.
     alternatePowerPlants?: boolean;
+    // Replaying an old game only: the site engine version it was played under
+    // (game.version in a boardgamers.space export). Rule changes newer than this
+    // version are not applied (see rule-versions.ts). New games never set it.
+    version?: number;
 }
 
 export enum ResourceType {

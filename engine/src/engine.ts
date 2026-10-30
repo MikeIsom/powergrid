@@ -134,6 +134,7 @@ export function setup(
         chooseRegions = false,
         chooseColors = false,
         alternatePowerPlants = false,
+        version,
     }: GameOptions,
     seed?: string,
     forceDeck?: PowerPlant[],
@@ -450,6 +451,7 @@ export function setup(
             chooseColors,
             // Only stored when in effect, so states of every other game are unchanged.
             ...(alternateDeck ? { alternatePowerPlants: true } : {}),
+            ...(version !== undefined ? { version } : {}),
         },
         log: [],
         hiddenLog: [],

@@ -2273,8 +2273,15 @@ export function addPowerPlant(G: GameState): void {
 
         // base-original-2013.pdf p.5: a drawn plant at or below any player's city count
         // is removed and replaced. Baden-Württemberg never removes such plants
-        // (maps-quebec-baden-wurttemberg.pdf p.2, ruling R6).
-        if (G.options.variant == 'original' && G.map.name != 'China' && G.map.name != 'Baden-Württemberg') {
+        // (maps-quebec-baden-wurttemberg.pdf p.2, ruling R6). Russia replaces the standard
+        // rules for exchanging out-of-date plants with its first-pass removal
+        // (maps-russia-japan.pdf p.2), as when building and when everyone passes.
+        if (
+            G.options.variant == 'original' &&
+            G.map.name != 'China' &&
+            G.map.name != 'Baden-Württemberg' &&
+            G.map.name != 'Russia'
+        ) {
             const maxCities = Math.max(...G.players.map((p) => p.cities.length));
             while (powerPlant.number <= maxCities) {
                 G.log.push({

@@ -320,4 +320,14 @@ describe('Rule fixes', () => {
             Object.assign(regional, saved);
         }
     });
+
+    it('C1: never removes a drawn Russia plant for city count under Original', () => {
+        const G = setup(3, { map: 'Russia', variant: 'original' }, 'c1');
+        G.players[0].cities = G.map.cities.slice(0, 10).map((c) => ({ name: c.name, position: 0 }));
+        G.actualMarket = plants(11, 12, 13);
+        G.futureMarket = plants(14, 15);
+        G.powerPlantsDeck = plants(8, 20);
+        addPowerPlant(G);
+        expect(G.actualMarket.map((p) => p.number)).to.deep.equal([8, 11, 12]);
+    });
 });

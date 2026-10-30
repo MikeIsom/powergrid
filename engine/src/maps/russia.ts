@@ -288,7 +288,12 @@ export const map: GameMap = {
 
         return { actualMarket, futureMarket, powerPlantsDeck };
     },
-    mapSpecificRules: 'The power plant market is restricted, and the rules for removing old ' + 'plants are changed.\n',
+    mapSpecificRules:
+        'The power plant market is restricted, and the rules for removing old plants are changed: ' +
+        'from round 2, the first time a player passes instead of offering a plant in an auction, ' +
+        'the smallest plant in the current market is removed and replaced. Under Original rules, ' +
+        'plants at or below the city count of a player are never removed, and nothing is removed ' +
+        'when everyone passes.\n',
     deckBuild: {
         recharged:
             'plants 6 and 14 are removed from the game. The ' +

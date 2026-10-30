@@ -319,3 +319,7 @@ export const map: GameMap = {
             '13 goes on top of the deck with 14 directly below it.',
     },
 };
+
+// Recharged: biogas starts on spaces 6–8, i.e. 9 tokens (maps-brazil-spain-portugal.pdf p.2, a change
+// to the Recharged rules). Original keeps 6 (owner's ruling).
+export const mapRecharged: GameMap = { ...map, startingResources: [24, 18, 9, 2] };

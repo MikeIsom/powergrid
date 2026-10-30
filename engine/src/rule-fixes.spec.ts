@@ -178,4 +178,11 @@ describe('Rule fixes', () => {
         expect(G.powerPlantsDeck).to.be.empty;
         expect([...G.actualMarket, ...G.futureMarket].map((p) => p.number)).to.deep.equal([11, 12, 13, 14, 15, 16, 17]);
     });
+
+    it('F9: starts Brazil with 9 biogas on spaces 6–8 under Recharged, 6 under Original', () => {
+        const recharged = setup(3, { map: 'Brazil', variant: 'recharged' }, 'f9');
+        expect([recharged.garbageMarket, recharged.garbageSupply]).to.deep.equal([9, 15]);
+        const original = setup(3, { map: 'Brazil', variant: 'original' }, 'f9');
+        expect([original.garbageMarket, original.garbageSupply]).to.deep.equal([6, 18]);
+    });
 });

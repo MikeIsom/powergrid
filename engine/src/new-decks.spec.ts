@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
 import { deckNote } from './deck-notes';
-import { move, setup } from './engine';
-import { GameState, hasPlug, MapName, Phase, PowerPlant, PowerPlantType } from './gamestate';
+import { move, setup, updatePlayerCapacity } from './engine';
+import { GameState, hasPlug, MapName, Phase, PowerPlant, PowerPlantType, ResourceType } from './gamestate';
 import { MoveName } from './move';
 import { alternatePowerPlants, powerPlants, set1PowerPlants } from './powerPlants';
 
@@ -308,5 +308,44 @@ describe('New power plant decks', () => {
                 expect(bought(39)).to.be.false;
             }
         }
+    });
+
+    it('removes the Middle East plants the notes name from the opening current market', () => {
+        // The notes' plants are exactly the garbage and nuclear plants with a plug.
+        const byRule = (plants: PowerPlant[]) =>
+            numbers(plants.filter((p) => p.plug && [PowerPlantType.Garbage, PowerPlantType.Uranium].includes(p.type)));
+        expect(byRule(set1PowerPlants)).to.deep.equal([6, 8]);
+        expect(byRule(alternatePowerPlants)).to.deep.equal([5, 13, 14]);
+        for (const [deck, gone] of [
+            ['set1', [6, 8]],
+            ['set2', [5, 13, 14]],
+        ] as const) {
+            for (const n of players) {
+                for (let seed = 0; seed < 10; seed++) {
+                    const G = setup(n, { map: 'Middle East', variant: 'recharged', plantDeck: deck }, `me-${seed}`);
+                    const current = numbers(G.actualMarket);
+                    expect(
+                        current.some((p) => (gone as readonly number[]).includes(p)),
+                        `${deck} ${n}p`
+                    ).to.be.false;
+                }
+            }
+        }
+    });
+
+    it('closes garbage buying in Step 1 on Middle East with Set 2', () => {
+        const garbageOffered = (deck: 'set1' | 'set2', step: number) => {
+            const G = game(deck, 'Middle East', 3);
+            G.phase = Phase.Resources;
+            G.step = step;
+            const player = G.players[G.currentPlayers[0]];
+            player.powerPlants = [{ number: 26, type: PowerPlantType.Garbage, cost: 1, citiesPowered: 4 }];
+            updatePlayerCapacity(player);
+            G.garbageMarket = 6;
+            return !!availableMoves(G, player)[MoveName.BuyResource]?.some((b) => b.resource == ResourceType.Garbage);
+        };
+        expect(garbageOffered('set2', 1)).to.be.false;
+        expect(garbageOffered('set2', 2)).to.be.true;
+        expect(garbageOffered('set1', 1)).to.be.true;
     });
 });

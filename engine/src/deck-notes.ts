@@ -20,6 +20,8 @@ export interface DeckNote {
     stepTwoTop?: number[];
     // Uranium resupply stops once a player buys this plant (Germany, Italy).
     uraniumStop?: number;
+    // No garbage can be bought during Step 1 (Middle East with Set 2).
+    noGarbageInStepOne?: boolean;
 }
 
 // Boxed for every map. Set 1: 52, 54, 57 and 60 (plants-new-power-plants-set1.pdf p.2).
@@ -44,6 +46,9 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [8] },
         'South Africa': { box: [7] },
         Quebec: { market: [11, 15, 16] },
+        // 06 and 08 leave the current market by Middle East's own Step 1 rule: they are
+        // its garbage and nuclear plants with a plug on the back.
+        'Middle East': noChanges,
         Benelux: noChanges,
         'Central Europe': noChanges,
         Korea: noChanges,
@@ -65,6 +70,8 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [13] },
         'South Africa': { box: [10] },
         Quebec: { market: [11], topOfStack: [17, 24] },
+        // 05, 13 and 14 leave the current market by Middle East's own Step 1 rule.
+        'Middle East': { noGarbageInStepOne: true },
         Benelux: noChanges,
         'Central Europe': noChanges,
         Korea: noChanges,
@@ -81,6 +88,11 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
 export function uraniumStopPlant(options: GameOptions, mapName: string): number | undefined {
     const deck = options.plantDeck;
     return deck == 'set1' || deck == 'set2' ? deckNotes[deck][mapName]?.uraniumStop : 39;
+}
+
+export function noGarbageInStepOne(options: GameOptions, mapName: string): boolean {
+    const deck = options.plantDeck;
+    return (deck == 'set1' || deck == 'set2') && !!deckNotes[deck][mapName]?.noGarbageInStepOne;
 }
 
 export function deckNote(deck: NewDeck, mapName: string): DeckNote {

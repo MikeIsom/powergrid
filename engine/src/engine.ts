@@ -164,9 +164,6 @@ export function setup(
         throw new Error(`Map "${map}" not found for variant "${variant}"`);
     }
     const chosenMap = cloneDeep(chosenMapRaw);
-    if (plantDeck != 'standard' && variant == 'original') {
-        throw new Error('The New Power Plants decks are only available under Recharged rules for now.');
-    }
     if (plantDeck == 'random') {
         // A dedicated rng, so the pick doesn't shift the rest of the setup's draws. Never
         // a shuffled deck where it is not allowed.
@@ -629,7 +626,7 @@ function prepareDeck(
     catalogue?: PowerPlant[]
 ): PreparedDeck {
     if (options.plantDeck == 'set1' || options.plantDeck == 'set2' || options.plantDeck == 'shuffled') {
-        return prepareNewDeck(map, numPlayers, options.plantDeck, rng, catalogue!);
+        return prepareNewDeck(map, numPlayers, options.plantDeck, rng, catalogue!, variant);
     }
     return map.setupDeck
         ? map.setupDeck(numPlayers, variant, rng, catalogue, options)
@@ -1404,7 +1401,10 @@ export function move(
                             ((G.map.name == 'Italy' &&
                                 (G.options.variant == 'recharged' ||
                                     rulesApply(G.options, 'italyUraniumStopOriginal'))) ||
-                                (G.map.name == 'Germany' && G.options.variant == 'recharged'));
+                                // A new deck's German stop applies under Original too (ruling O4).
+                                (G.map.name == 'Germany' &&
+                                    (G.options.variant == 'recharged' ||
+                                        ['set1', 'set2', 'shuffled'].includes(G.options.plantDeck ?? 'standard'))));
                         let uraniumResupplyValue = 0;
                         if (!uraniumPhasedOut) {
                             uraniumResupplyValue = Math.min(

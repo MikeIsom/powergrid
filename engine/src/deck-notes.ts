@@ -204,6 +204,8 @@ export function uraniumStopPlant(options: GameOptions, mapName: string): number 
 // by its own deck's notes does, so the first of them bought stops it (owner's ruling).
 export function isUraniumStopPlant(G: GameState, plant: PowerPlant): boolean {
     if (G.options.plantDeck == 'shuffled') {
+        // The standard deck has no German stop under Original (owner's ruling).
+        if (plant.origin == 'standard' && G.map.name == 'Germany' && G.options.variant == 'original') return false;
         const stop = plant.origin ? cardDeckNote(plant.origin, G.map.name).uraniumStop : undefined;
         return stop !== undefined && faceValue(plant) === stop;
     }

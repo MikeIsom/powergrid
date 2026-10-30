@@ -15,6 +15,8 @@ export const ruleVersions = {
     italyUraniumStopOriginal: 14,
     // Baden-Wurttemberg: drawn plants at or below a city count are kept (F5).
     badenWurttembergKeepsDrawnPlants: 14,
+    // Russia, Original: drawn plants at or below a city count are kept (C1).
+    russiaKeepsDrawnPlants: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

@@ -91,4 +91,18 @@ describe('Rule versions', () => {
         expect(market(13)).to.deep.equal([11, 12, 13, 14]);
         expect(market(14)).to.deep.equal([8, 11, 12, 13]);
     });
+
+    it('russiaKeepsDrawnPlants: keeps a too-small drawn Russia plant from version 14', () => {
+        const market = (version: number) => {
+            const G = setup(3, { map: 'Russia', variant: 'original', version }, 'versions');
+            G.players[0].cities = G.map.cities.slice(0, 10).map((c) => ({ name: c.name, position: 0 }));
+            G.actualMarket = plants(11, 12, 13);
+            G.futureMarket = plants(14, 15);
+            G.powerPlantsDeck = plants(8, 20);
+            addPowerPlant(G);
+            return G.actualMarket.map((p) => p.number);
+        };
+        expect(market(13)).to.deep.equal([11, 12, 13]);
+        expect(market(14)).to.deep.equal([8, 11, 12]);
+    });
 });

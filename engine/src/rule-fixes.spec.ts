@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
 import { addPowerPlant, getPowerPlant, move, setup, updatePlayerCapacity } from './engine';
-import { GameState, Phase, ResourceType, Variant } from './gamestate';
+import { GameState, Phase, PowerPlantType, ResourceType, Variant } from './gamestate';
+import { map as northernEurope } from './maps/northerneurope';
 import { MoveName } from './move';
 
 const variants: Variant[] = ['original', 'recharged'];
@@ -282,5 +283,41 @@ describe('Rule fixes', () => {
             G.actualMarket.map((p) => p.number),
             'next round'
         ).to.deep.equal([22, 30, 40, 42, 44, 46]);
+    });
+
+    it('F17: swaps Northern Europe regional plants in before the market and stack are prepared', () => {
+        // Regional plants with numbers the deck lacks show whether the swap comes
+        // first: swapped in afterwards, they have nothing to replace and are lost.
+        const regional = northernEurope.regionalPowerPlants!;
+        const saved = { ...regional };
+        const extraNumbers = [41, 43, 45, 47, 48, 49];
+        const extra = (region: string) => ({
+            number: extraNumbers[Object.keys(saved).indexOf(region)],
+            type: PowerPlantType.Wind,
+            cost: 0,
+            citiesPowered: 5,
+        });
+        try {
+            for (const region of Object.keys(regional)) regional[region] = [...regional[region], extra(region)];
+            for (const variant of variants) {
+                for (const chooseRegions of [false, true]) {
+                    let G = setup(5, { map: 'Northern Europe', variant, chooseRegions }, 'f17');
+                    while (G.regionDraft) {
+                        const p = G.currentPlayers[0];
+                        G.players[p].availableMoves = availableMoves(G, G.players[p]);
+                        const region = G.players[p].availableMoves!.ChooseRegion![0];
+                        G = move(G, { name: MoveName.ChooseRegion, data: region }, p);
+                    }
+                    const inPlay = [...new Set(G.map.cities.map((c) => c.region))].sort();
+                    const inGame = [...G.actualMarket, ...G.futureMarket, ...G.powerPlantsDeck];
+                    expect(
+                        inGame.filter((p) => extraNumbers.includes(p.number)),
+                        `${variant}${chooseRegions ? ', drafted regions' : ''}`
+                    ).to.have.deep.members(inPlay.map(extra));
+                }
+            }
+        } finally {
+            Object.assign(regional, saved);
+        }
     });
 });

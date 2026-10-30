@@ -31,6 +31,7 @@ import {
     ResourceType,
     resupplyUraniumMine,
     sellUraniumMine,
+    Variant,
 } from './gamestate';
 import { GameMap, maps, mapsRecharged } from './maps';
 import { Move, MoveName, Moves } from './move';
@@ -165,22 +166,14 @@ export function setup(
         actualMarket = powerPlantsDeck.splice(0, 4);
         futureMarket = powerPlantsDeck.splice(0, 4);
     } else {
-        if (chosenMap.setupDeck) {
-            ({ actualMarket, futureMarket, powerPlantsDeck } = chosenMap.setupDeck(
-                numPlayers,
-                variant,
-                rng,
-                alternateDeck ? deck : undefined
-            ));
-        } else {
-            ({ actualMarket, futureMarket, powerPlantsDeck } = defaultSetupDeck(
-                numPlayers,
-                variant,
-                rng,
-                useNewRechargedSetup,
-                alternateDeck ? deck : undefined
-            ));
-        }
+        ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+            chosenMap,
+            numPlayers,
+            variant,
+            rng,
+            useNewRechargedSetup,
+            alternateDeck ? deck : undefined
+        ));
     }
 
     const players: Player[] = range(numPlayers).map((id) => ({
@@ -349,7 +342,17 @@ export function setup(
             }
 
             finalMap = filterMapToRegions(chosenMap, playRegions);
-            applyRegionalPowerPlants(chosenMap, playRegions, actualMarket, futureMarket, powerPlantsDeck);
+            if (chosenMap.regionalPowerPlants && !forceDeck) {
+                // A fresh rng on the same seed replays the preparation's own draws.
+                ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+                    chosenMap,
+                    numPlayers,
+                    variant,
+                    seedrandom(seed),
+                    useNewRechargedSetup,
+                    withRegionalPlants(deck, chosenMap, playRegions)
+                ));
+            }
         }
     }
 
@@ -562,30 +565,33 @@ function filterMapToRegions(map: GameMap, playRegions: Set<string>): GameMap {
 // Applies the map's regionalPowerPlants overrides for the chosen regions, swapping
 // the replacement plants into whichever of the three decks currently hold the
 // matching plant numbers. Mutates the passed arrays in place.
-function applyRegionalPowerPlants(
+// A map's opening market and stack: its own preparation, or the standard one.
+function prepareDeck(
     map: GameMap,
-    playRegions: Set<string>,
-    actualMarket: PowerPlant[],
-    futureMarket: PowerPlant[],
-    powerPlantsDeck: PowerPlant[]
+    numPlayers: number,
+    variant: Variant,
+    rng: seedrandom.prng,
+    useNewRechargedSetup: boolean,
+    catalogue?: PowerPlant[]
 ) {
-    if (!map.regionalPowerPlants) {
-        return;
-    }
-    for (const region of playRegions) {
-        const replacements = map.regionalPowerPlants[region];
-        if (replacements) {
-            for (const newPlant of replacements) {
-                const swapIn = (arr: PowerPlant[]) => {
-                    const idx = arr.findIndex((p) => p.number === newPlant.number);
-                    if (idx !== -1) arr[idx] = { ...newPlant };
-                };
-                swapIn(actualMarket);
-                swapIn(futureMarket);
-                swapIn(powerPlantsDeck);
-            }
-        }
-    }
+    return map.setupDeck
+        ? map.setupDeck(numPlayers, variant, rng, catalogue)
+        : defaultSetupDeck(numPlayers, variant, rng, useNewRechargedSetup, catalogue);
+}
+
+// Northern Europe: each region in play adds its two plants and boxes the plants with
+// the same numbers, before the market and stack are prepared
+// (maps-northern-europe-uk-ireland.pdf p.2).
+function withRegionalPlants(catalogue: PowerPlant[], map: GameMap, regions: Set<string>): PowerPlant[] {
+    const added = [...regions].reduce(
+        (plants, region) => plants.concat(map.regionalPowerPlants?.[region] ?? []),
+        [] as PowerPlant[]
+    );
+    const numbers = new Set(added.map((p) => p.number));
+    return catalogue
+        .filter((p) => !numbers.has(p.number))
+        .concat(cloneDeep(added))
+        .sort((a, b) => a.number - b.number);
 }
 
 // Completes the chooseRegions draft: filters the map to the picked regions, applies
@@ -596,7 +602,25 @@ function finalizeRegions(G: GameState) {
     const fullMap = G.map;
 
     G.map = filterMapToRegions(fullMap, playRegions);
-    applyRegionalPowerPlants(fullMap, playRegions, G.actualMarket, G.futureMarket, G.powerPlantsDeck);
+    const variant = G.options.variant ?? 'original';
+    const mapData = (variant == 'original' ? maps : mapsRecharged).find((m) => m.name == fullMap.name)!;
+    if (mapData.regionalPowerPlants) {
+        // The deck is prepared again now that the regions are known, replaying the
+        // setup's draws (setup's first use of its rng was the deck preparation).
+        const catalogue = plantCatalogue(mapData.name, G.options.alternatePowerPlants);
+        ({
+            actualMarket: G.actualMarket,
+            futureMarket: G.futureMarket,
+            powerPlantsDeck: G.powerPlantsDeck,
+        } = prepareDeck(
+            mapData,
+            G.players.length,
+            variant,
+            seedrandom(G.seed),
+            G.options.useNewRechargedSetup ?? true,
+            withRegionalPlants(catalogue, mapData, playRegions)
+        ));
+    }
     // knownPowerPlantDeck mirrors actualMarket+futureMarket and must reflect any swap.
     G.knownPowerPlantDeck = G.actualMarket.concat(G.futureMarket);
 

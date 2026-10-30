@@ -189,9 +189,9 @@ export const map: GameMap = {
         'Players with cities only in Norway or Denmark may not bid on or buy nuclear plants. ' +
         'Resources start at: coal 3 Elektro, oil 3 Elektro, garbage 5 Elektro, uranium 7 Elektro.\n',
     deckBuild:
-        'standard setup; the regions in play swap in regional ' +
-        'versions of certain power plants (same numbers, different fuel or ' +
-        'output).',
+        'before the market and stack are prepared, each region in play adds its ' +
+        'two regional power plants and boxes the plants with the same numbers ' +
+        '(same numbers, different fuel or output); then the standard setup.',
     connections: [
         { nodes: [Cities.Bood, Cities.Tromso], cost: 17 },
         { nodes: [Cities.Tromso, Cities.Oulu], cost: 25 },

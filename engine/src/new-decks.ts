@@ -1,0 +1,95 @@
+import seedrandom from 'seedrandom';
+import { deckBox, deckNote, NewDeck } from './deck-notes';
+import { hasPlug, PowerPlant, PowerPlantType } from './gamestate';
+import { GameMap } from './maps';
+import { shuffle } from './utils';
+
+// How a map prepares its market and stack under Recharged, apart from the deck notes.
+interface MapPreparation {
+    // Plants in the opening current and future markets.
+    market: [number, number];
+    // Plug cards put on top of the stack: one set aside (the standard rule), all the
+    // undrawn ones, or none.
+    plugsOnTop: 'one' | 'all' | 'none';
+    // Plug and socket cards removed at random, indexed by player count - 2.
+    plugRemovals: number[];
+    socketRemovals: number[];
+    // Plants kept out of the player-count removal and shuffled back in.
+    protect?: (plant: PowerPlant) => boolean;
+    // Plants placed under the Step 3 card.
+    belowStepThree: number;
+}
+
+// base-recharged.pdf p.3: 8 plug cards to the market, one more set aside for the top of
+// the stack, then remove 1/2/1 plug and 5/6/3 socket cards with 2/3/4 players.
+const standard: MapPreparation = {
+    market: [4, 4],
+    plugsOnTop: 'one',
+    plugRemovals: [1, 2, 1, 0, 0],
+    socketRemovals: [5, 6, 3, 0, 0],
+    belowStepThree: 0,
+};
+
+const mapPreparations: Record<string, Partial<MapPreparation>> = {
+    // UK & Ireland: two plants below the Step 3 card (maps-northern-europe-uk-ireland.pdf p.2).
+    'UK & Ireland': { belowStepThree: 2 },
+};
+
+export function mapPreparation(mapName: string): MapPreparation {
+    return { ...standard, ...mapPreparations[mapName] };
+}
+
+export interface PreparedDeck {
+    actualMarket: PowerPlant[];
+    futureMarket: PowerPlant[];
+    powerPlantsDeck: PowerPlant[];
+}
+
+// Prepares the opening market and stack for Set 1 or Set 2 under Recharged: the
+// deck's map notes first, then the map's own preparation with the cards of the deck.
+export function prepareNewDeck(
+    map: GameMap,
+    numPlayers: number,
+    deck: NewDeck,
+    rng: seedrandom.prng,
+    catalogue: PowerPlant[]
+): PreparedDeck {
+    const note = deckNote(deck, map.name);
+    const prep = mapPreparation(map.name);
+    const boxed = new Set([...deckBox[deck], ...(note.box ?? [])]);
+    let cards = catalogue.filter((p) => !boxed.has(p.number)).map((p) => ({ ...p }));
+
+    // Europe prepares its own market and stack from the plug cards of any deck.
+    if (map.name == 'Europe' && map.setupDeck) {
+        return map.setupDeck(numPlayers, 'recharged', rng, cards);
+    }
+
+    const step3 = cards.find((p) => p.type == PowerPlantType.Step3)!;
+    cards = cards.filter((p) => p != step3);
+
+    let plugs = shuffle(
+        cards.filter((p) => hasPlug(p)),
+        rng() + ''
+    );
+    let sockets = shuffle(
+        cards.filter((p) => !hasPlug(p)),
+        rng() + ''
+    );
+
+    const market = plugs.splice(0, prep.market[0] + prep.market[1]).sort((a, b) => a.number - b.number);
+    const onTop = prep.plugsOnTop == 'one' ? plugs.splice(0, 1) : prep.plugsOnTop == 'all' ? plugs.splice(0) : [];
+
+    const isProtected = (p: PowerPlant) => !!prep.protect?.(p);
+    const protectedPlants = [...plugs, ...sockets].filter(isProtected);
+    plugs = plugs.filter((p) => !isProtected(p)).slice(prep.plugRemovals[numPlayers - 2]);
+    sockets = sockets.filter((p) => !isProtected(p)).slice(prep.socketRemovals[numPlayers - 2]);
+
+    const stack = [...onTop, ...shuffle([...plugs, ...sockets, ...protectedPlants], rng() + '')];
+    stack.splice(stack.length - prep.belowStepThree, 0, step3);
+
+    return {
+        actualMarket: market.slice(0, prep.market[0]),
+        futureMarket: market.slice(prep.market[0]),
+        powerPlantsDeck: stack,
+    };
+}

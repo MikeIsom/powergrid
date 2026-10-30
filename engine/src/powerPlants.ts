@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { PowerPlant, PowerPlantType } from './gamestate';
+import { PlantDeck, PowerPlant, PowerPlantType } from './gamestate';
 
 const powerPlants: PowerPlant[] = [
     { number: 3, type: PowerPlantType.Oil, cost: 2, citiesPowered: 1 },
@@ -174,8 +174,25 @@ function usesAlternateDeck(mapName: string, alternate: boolean | undefined): boo
     return !!alternate && ALTERNATE_DECK_MAPS.includes(mapName);
 }
 
-// The full card list a game on this map draws from.
-function plantCatalogue(mapName: string, alternate?: boolean): PowerPlant[] {
+// India's garbage plants need one more garbage token to run but store no more
+// (maps-australia-indian-subcontinent.pdf p.3).
+function withIndiaGarbage(deck: PowerPlant[]): PowerPlant[] {
+    return cloneDeep(deck).map((pp) =>
+        pp.type == PowerPlantType.Garbage ? { ...pp, storage: 2 * pp.cost, cost: pp.cost + 1 } : pp
+    );
+}
+const indiaSet1 = withIndiaGarbage(set1PowerPlants);
+const indiaSet2 = withIndiaGarbage(alternatePowerPlants);
+
+// The full card list a game on this map draws from. Set 1 and Set 2 (plantDeck) are
+// the whole cards of their sets; the map notes decide which of them are used.
+function plantCatalogue(mapName: string, alternate?: boolean, plantDeck?: PlantDeck): PowerPlant[] {
+    if (plantDeck == 'set1') {
+        return mapName == 'India' ? indiaSet1 : set1PowerPlants;
+    }
+    if (plantDeck == 'set2') {
+        return mapName == 'India' ? indiaSet2 : alternatePowerPlants;
+    }
     if (mapName == 'India') {
         return indiaPowerPlants;
     }

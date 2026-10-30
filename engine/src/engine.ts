@@ -37,6 +37,7 @@ import {
 } from './gamestate';
 import { GameMap, maps, mapsRecharged } from './maps';
 import { Move, MoveName, Moves } from './move';
+import { prepareNewDeck } from './new-decks';
 import { plantCatalogue, powerPlants, usesAlternateDeck } from './powerPlants';
 import prices from './prices';
 import { createRandomizedMap } from './randomizeMap';
@@ -136,6 +137,7 @@ export function setup(
         chooseRegions = false,
         chooseColors = false,
         alternatePowerPlants = false,
+        plantDeck = 'standard',
         version,
     }: GameOptions,
     seed?: string,
@@ -157,9 +159,18 @@ export function setup(
         throw new Error(`Map "${map}" not found for variant "${variant}"`);
     }
     const chosenMap = cloneDeep(chosenMapRaw);
-    // The option is only honoured on the maps that support the alternate deck.
-    const alternateDeck = usesAlternateDeck(chosenMap.name, alternatePowerPlants);
-    const deck = plantCatalogue(chosenMap.name, alternateDeck);
+    if (plantDeck == 'shuffled' || plantDeck == 'random') {
+        throw new Error(`The ${plantDeck} power plant deck is not available yet.`);
+    }
+    if (plantDeck != 'standard' && variant == 'original') {
+        throw new Error('The New Power Plants decks are only available under Recharged rules for now.');
+    }
+    // The alternate deck option is only honoured on the maps that support it, where it
+    // is Set 2. Set 2 there is the alternate deck; elsewhere, and Set 1 anywhere, is a
+    // new deck prepared with its map notes.
+    const alternateDeck = usesAlternateDeck(chosenMap.name, alternatePowerPlants || plantDeck == 'set2');
+    const newDeck = plantDeck != 'standard' && !alternateDeck ? plantDeck : undefined;
+    const deck = plantCatalogue(chosenMap.name, alternateDeck, newDeck);
 
     let actualMarket: PowerPlant[];
     let futureMarket: PowerPlant[];
@@ -175,8 +186,8 @@ export function setup(
             numPlayers,
             variant,
             rng,
-            { useNewRechargedSetup, version },
-            alternateDeck ? deck : undefined
+            { useNewRechargedSetup, version, plantDeck: newDeck },
+            alternateDeck || newDeck ? deck : undefined
         ));
     }
 
@@ -193,7 +204,7 @@ export function setup(
         uraniumLeft: 0,
         hybridCapacity: 0,
         hybridLeft: 0,
-        ...(alternateDeck ? { garbageOilHybridCapacity: 0 } : {}),
+        ...(alternateDeck || newDeck == 'set2' ? { garbageOilHybridCapacity: 0 } : {}),
         money: 50,
         housesLeft: 22,
         cities: [],
@@ -353,7 +364,7 @@ export function setup(
                     numPlayers,
                     variant,
                     seedrandom(seed),
-                    { useNewRechargedSetup, version },
+                    { useNewRechargedSetup, version, plantDeck: newDeck },
                     withRegionalPlants(deck, chosenMap, playRegions)
                 ));
             }
@@ -459,6 +470,7 @@ export function setup(
             chooseColors,
             // Only stored when in effect, so states of every other game are unchanged.
             ...(alternateDeck ? { alternatePowerPlants: true } : {}),
+            ...(newDeck ? { plantDeck: newDeck } : {}),
             ...(version !== undefined ? { version } : {}),
         },
         log: [],
@@ -585,6 +597,9 @@ function prepareDeck(
     options: GameOptions,
     catalogue?: PowerPlant[]
 ) {
+    if (options.plantDeck == 'set1' || options.plantDeck == 'set2') {
+        return prepareNewDeck(map, numPlayers, options.plantDeck, rng, catalogue!);
+    }
     return map.setupDeck
         ? map.setupDeck(numPlayers, variant, rng, catalogue, options)
         : defaultSetupDeck(numPlayers, variant, rng, options.useNewRechargedSetup ?? true, catalogue);
@@ -618,7 +633,7 @@ function finalizeRegions(G: GameState) {
     if (mapData.regionalPowerPlants) {
         // The deck is prepared again now that the regions are known, replaying the
         // setup's draws (setup's first use of its rng was the deck preparation).
-        const catalogue = plantCatalogue(mapData.name, G.options.alternatePowerPlants);
+        const catalogue = plantCatalogue(mapData.name, G.options.alternatePowerPlants, G.options.plantDeck);
         ({
             actualMarket: G.actualMarket,
             futureMarket: G.futureMarket,

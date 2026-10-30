@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
-import { hasPlug, PowerPlant, PowerPlantType } from './gamestate';
+import { setup } from './engine';
+import { GameState, hasPlug, MapName, PowerPlant, PowerPlantType } from './gamestate';
 import { alternatePowerPlants, powerPlants, set1PowerPlants } from './powerPlants';
 
 const { Coal, Oil, Garbage, Uranium, Hybrid, Wind, Nuclear, GarbageOilHybrid } = PowerPlantType;
@@ -66,5 +67,83 @@ describe('New power plant decks', () => {
         expect(hasPlug({ number: 15, type: Coal, cost: 2, citiesPowered: 3 })).to.be.true;
         expect(hasPlug({ number: 16, type: Oil, cost: 2, citiesPowered: 3 })).to.be.false;
         expect(hasPlug({ number: 16, type: Wind, cost: 0, citiesPowered: 2, plug: true })).to.be.true;
+    });
+
+    it('rejects decks that are not available yet', () => {
+        expect(() => setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'shuffled' })).to.throw(
+            'not available yet'
+        );
+        expect(() => setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'random' })).to.throw('not available yet');
+        expect(() => setup(3, { map: 'USA', variant: 'original', plantDeck: 'set1' })).to.throw('Recharged');
+    });
+
+    it('throws a clear error for a deck and map without map notes', () => {
+        expect(() => setup(3, { map: 'Germany', variant: 'recharged', plantDeck: 'set1' }, 'n')).to.throw(
+            'There are no Set 1 map notes for Germany.'
+        );
+    });
+
+    it('stores the deck only when it is not the standard deck', () => {
+        expect(setup(3, { map: 'USA', variant: 'recharged' }, 'd').options).not.to.have.property('plantDeck');
+        expect(setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'standard' }, 'd').options).not.to.have.property(
+            'plantDeck'
+        );
+        expect(setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'set1' }, 'd').options.plantDeck).to.equal(
+            'set1'
+        );
+    });
+
+    it('plays Set 2 on Europe and North America as the alternate deck', () => {
+        for (const map of ['Europe', 'North America'] as MapName[]) {
+            const viaDeck = setup(4, { map, variant: 'recharged', plantDeck: 'set2' }, 'alt');
+            const viaOption = setup(4, { map, variant: 'recharged', alternatePowerPlants: true }, 'alt');
+            expect(viaDeck.options.alternatePowerPlants, map).to.be.true;
+            expect(viaDeck.options, map).not.to.have.property('plantDeck');
+            expect(JSON.stringify(viaDeck), map).to.equal(JSON.stringify(viaOption));
+        }
+    });
+
+    const noChangeMaps: MapName[] = [
+        'USA',
+        'Benelux',
+        'Central Europe',
+        'Korea',
+        'Japan',
+        'UK & Ireland',
+        'Europe',
+        'North America',
+        'Baden-Württemberg',
+    ];
+    const inGame = (G: GameState) =>
+        [...G.actualMarket, ...G.futureMarket, ...G.powerPlantsDeck].filter((p) => p.type != PowerPlantType.Step3);
+
+    it('prepares Set 1 and Set 2 on the maps whose notes need no changes', () => {
+        // 46 Set 1 cards less 52, 54, 57 and 60; 42 Set 2 cards. Recharged removals:
+        // 1+5, 2+6 and 1+3 plants with 2, 3 and 4 players (base-recharged.pdf p.3).
+        const removed = [6, 8, 4, 0, 0];
+        for (const [deck, total] of [
+            ['set1', 42],
+            ['set2', 42],
+        ] as const) {
+            for (const map of noChangeMaps) {
+                for (const n of [2, 3, 4, 5, 6]) {
+                    const label = `${deck} ${map} ${n}p`;
+                    const G = setup(n, { map, variant: 'recharged', plantDeck: deck }, `nc-${label}`);
+                    const market = [...G.actualMarket, ...G.futureMarket];
+                    expect(market.length, label).to.equal(map == 'Europe' ? 9 : 8);
+                    expect(market.every(hasPlug), label).to.be.true;
+                    expect(inGame(G).length, label).to.equal(total - removed[n - 2]);
+                    expect(
+                        inGame(G).some((p) => [52, 54, 57, 60].includes(p.number)),
+                        label
+                    ).to.be.false;
+                    const step3At = G.powerPlantsDeck.findIndex((p) => p.type == PowerPlantType.Step3);
+                    const below = map == 'UK & Ireland' ? 2 : 0;
+                    expect(step3At, label).to.equal(G.powerPlantsDeck.length - 1 - below);
+                    if (map != 'Europe') expect(hasPlug(G.powerPlantsDeck[0]), `${label}: plug card on top`).to.be.true;
+                    expect(G.players[0].garbageOilHybridCapacity !== undefined, label).to.equal(deck == 'set2');
+                }
+            }
+        }
     });
 });

@@ -35,6 +35,7 @@ export type MapName =
     | 'Bremen'
     | 'Manhattan';
 export type Variant = 'original' | 'recharged';
+export type PlantDeck = 'standard' | 'set1' | 'set2' | 'shuffled' | 'random';
 
 export interface GameOptions {
     fastBid?: boolean;
@@ -57,6 +58,11 @@ export interface GameOptions {
     // alternatePowerPlants in powerPlants.ts) instead of the standard one. Only
     // honoured on the maps in ALTERNATE_DECK_MAPS; ignored everywhere else.
     alternatePowerPlants?: boolean;
+    // The power plant deck: the standard deck, or The New Power Plants Set 1 or Set 2
+    // with 2F-Spiele's map notes (deck-notes.ts). Recharged only for now. Stored only
+    // when it is not the standard deck. alternatePowerPlants still means Set 2 on
+    // Europe and North America.
+    plantDeck?: PlantDeck;
     // Replaying an old game only: the site engine version it was played under
     // (game.version in a boardgamers.space export). Rule changes newer than this
     // version are not applied (see rule-versions.ts). New games never set it.

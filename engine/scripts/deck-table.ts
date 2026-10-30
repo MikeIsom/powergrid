@@ -21,6 +21,8 @@ import { plantCatalogue } from '../src/powerPlants';
 
 export interface DeckRow {
     deck: NewDeck | 'shuffled';
+    // Recharged unless set.
+    variant?: 'original';
     map: string;
     boxed: string;
     market: string;
@@ -149,6 +151,58 @@ function row(deck: NewDeck, mapName: string): DeckRow {
 }
 
 // A shuffled deck: each deck's notes, applying only to that deck's cards.
+// Under Original (rulings O1–O8): the market and the top plant from a real 4-player setup.
+function originalRow(deck: NewDeck, mapName: string): DeckRow {
+    const recharged = row(deck, mapName);
+    const prep = mapPreparation(mapName);
+    const G = setup(4, { map: mapName as MapName, variant: 'original', plantDeck: deck }, 'table-4');
+    const market = [...G.actualMarket, ...G.futureMarket].map((p) => p.number);
+    const topPlant = G.powerPlantsDeck[0];
+    const inGame = players.map((n) => {
+        const g = setup(n, { map: mapName as MapName, variant: 'original', plantDeck: deck }, `table-${n}`);
+        return [...g.actualMarket, ...g.futureMarket, ...g.powerPlantsDeck].filter(
+            (p) => p.type != PowerPlantType.Step3
+        ).length;
+    });
+    const note = deckNote(deck, mapName);
+    return {
+        ...recharged,
+        variant: 'original',
+        market:
+            mapName == 'Europe'
+                ? "4 + 5 at random from the plug cards (Europe's own)"
+                : prep.stack == 'china'
+                ? 'the lowest plant for each player'
+                : `${list(market)} at 4P${note.market ? `; ${list(note.market)} placed first` : ''}`,
+        plugPool: '—',
+        top:
+            prep.stack == 'china'
+                ? 'plants up to 30, ascending'
+                : prep.stack == 'manhattan'
+                ? `the plug cards left over (4P: ${hasPlug(topPlant) ? topPlant.number : 'none'})`
+                : mapName == 'Europe'
+                ? 'no plant'
+                : [
+                      note.topOfStack ? list(note.topOfStack) : '',
+                      // Ruling O2's plant, if a note didn't take it.
+                      G.powerPlantsDeck[note.topOfStack?.length ?? 0].number == (deck == 'set1' ? 10 : 11)
+                          ? String(deck == 'set1' ? 10 : 11)
+                          : 'no plant (a note takes it)',
+                  ]
+                      .filter((t) => t)
+                      .join(', then '),
+        removals:
+            prep.stack == 'china'
+                ? 'none (box lists)'
+                : prep.stack == 'manhattan'
+                ? `none; the ${note.boxPlugs} highest plug cards boxed`
+                : prep.originalRemovals.every((n) => n == 0)
+                ? 'none'
+                : [2, 3, 4].map((n) => `${n}P ${prep.originalRemovals[n - 2]}`).join(', '),
+        inGame,
+    };
+}
+
 function shuffledRow(mapName: string): DeckRow {
     const excluded = SHUFFLED_EXCLUDED_MAPS.includes(mapName);
     const notes: [string, DeckNote][] = [
@@ -218,6 +272,9 @@ export function deckTable(): DeckRow[] {
         for (const map of mapsRecharged.map((m) => m.name)) rows.push(row(deck, map));
     }
     for (const map of mapsRecharged.map((m) => m.name)) rows.push(shuffledRow(map));
+    for (const deck of Object.keys(deckNotes) as NewDeck[]) {
+        for (const map of mapsRecharged.map((m) => m.name)) rows.push(originalRow(deck, map));
+    }
     return rows;
 }
 

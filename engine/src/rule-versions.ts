@@ -4,7 +4,10 @@ import { GameOptions } from './gamestate';
 // each gated rule change applies. A game replayed with options.version below a
 // change's version keeps the older behaviour; a game without a version (every new
 // game) gets every change. engine/README.md lists the same table.
-export const ruleVersions = {} as const;
+export const ruleVersions = {
+    // Logs "Starting Step N." for a step change that has no event of its own (9ce6a15).
+    stepAnnouncementLog: 13,
+} as const;
 
 export type RuleChange = keyof typeof ruleVersions;
 

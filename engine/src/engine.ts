@@ -39,6 +39,7 @@ import { Move, MoveName, Moves } from './move';
 import { plantCatalogue, powerPlants, usesAlternateDeck } from './powerPlants';
 import prices from './prices';
 import { createRandomizedMap } from './randomizeMap';
+import { rulesApply } from './rule-versions';
 import { asserts, shuffle } from './utils';
 
 // Re-exported from gamestate (single source of truth) so existing importers that
@@ -2645,13 +2646,16 @@ function enterStepTwo(G: GameState, reason = 'Starting Step 2') {
     }
 }
 
-function startStep(G: GameState, step: 2 | 3, event = `Starting Step ${step}.`) {
+function startStep(G: GameState, step: 2 | 3, event?: string) {
     if (G.step === step) return;
     G.step = step;
     if (step === 3 && G.options.variant === 'recharged' && G.options.endPlantDiscountAtStep3) {
         G.plantDiscountActive = false;
     }
-    G.log.push({ type: 'event', event });
+    // Before step announcements, a step change without its own event was not logged.
+    if (event !== undefined || rulesApply(G.options, 'stepAnnouncementLog')) {
+        G.log.push({ type: 'event', event: event ?? `Starting Step ${step}.` });
+    }
     (G.pendingMessages ??= []).push(`Starting Step ${step}.`);
 }
 

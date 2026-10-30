@@ -2,10 +2,10 @@ import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
 import { deckNote } from './deck-notes';
-import { move, setup, updatePlayerCapacity } from './engine';
+import { calculateMaxCitiesPowered, move, setup, updatePlayerCapacity } from './engine';
 import { GameState, hasPlug, MapName, Phase, PowerPlant, PowerPlantType, ResourceType } from './gamestate';
 import { MoveName } from './move';
-import { alternatePowerPlants, powerPlants, set1PowerPlants } from './powerPlants';
+import { alternatePowerPlants, plantCatalogue, powerPlants, set1PowerPlants } from './powerPlants';
 
 const { Coal, Oil, Garbage, Uranium, Hybrid, Wind, Nuclear, GarbageOilHybrid } = PowerPlantType;
 
@@ -488,5 +488,36 @@ describe('New power plant decks', () => {
         const chose = G.log.filter((l) => l.type == 'move').pop()!;
         expect(chose.type == 'move' && chose.simple).to.contain('chooses Power Plant 25');
         expect(chose.type == 'move' && chose.simple).not.to.contain('25.1');
+    });
+
+    it('runs an India garbage/oil hybrid on its printed oil, or one more token with garbage', () => {
+        const G = game('set2', 'India', 3);
+        G.phase = Phase.Bureaucracy;
+        const player = G.players[0];
+        const hybrid = plantCatalogue('India', false, 'set2').find((p) => p.number == 22)!; // G/O 3→5
+        player.powerPlants = [hybrid];
+        updatePlayerCapacity(player);
+        expect(player.garbageOilHybridCapacity, 'storage stays twice the printed 3').to.equal(6);
+        player.garbageLeft = 4;
+        player.oilLeft = 3;
+        player.powerPlantsNotUsed = [22];
+        const runs = availableMoves(G, player)[MoveName.UsePowerPlant]!.map((u) => u.resourcesSpent.join(','));
+        expect(runs).to.deep.equal([
+            'garbage,garbage,garbage,garbage',
+            'garbage,garbage,garbage,oil',
+            'garbage,garbage,oil,oil',
+            'garbage,oil,oil,oil',
+            'oil,oil,oil',
+        ]);
+
+        player.cities = G.map.cities.slice(0, 5).map((c) => ({ name: c.name, position: 0 }));
+        const target = (garbage: number, oil: number) => {
+            player.garbageLeft = garbage;
+            player.oilLeft = oil;
+            return calculateMaxCitiesPowered(G, player);
+        };
+        expect(target(0, 3), 'oil alone').to.equal(5);
+        expect(target(2, 2), 'two garbage and two oil').to.equal(5);
+        expect(target(1, 2), 'three tokens with garbage are one short').to.equal(0);
     });
 });

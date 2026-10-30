@@ -3021,7 +3021,7 @@ export function calculateMaxCitiesPowered(G: GameState, player: Player) {
 
     let max = 0;
     permutations.forEach((permutation) => {
-        if (isValid(player, permutation)) {
+        if (isValid(player, permutation, G.map.name == 'India')) {
             const citiesPowered = permutation.map((p) => p.citiesPowered).reduce((a, b) => a + b, 0);
             max = Math.max(max, citiesPowered);
         }
@@ -3030,7 +3030,7 @@ export function calculateMaxCitiesPowered(G: GameState, player: Player) {
     return Math.min(player.cities.length, max);
 }
 
-function isValid(player: Player, powerPlants: PowerPlant[]) {
+function isValid(player: Player, powerPlants: PowerPlant[], india = false) {
     const coalUsed = powerPlants
         .filter((pp) => pp.type == PowerPlantType.Coal)
         .map((pp) => pp.cost)
@@ -3068,23 +3068,33 @@ function isValid(player: Player, powerPlants: PowerPlant[]) {
     // Garbage/oil hybrids draw on the leftover garbage and oil, sharing that oil with
     // any coal/oil hybrids: each kind must fit its own fuels, and both together must
     // fit everything that is left.
-    const garbageOilUsed = powerPlants
-        .filter((pp) => pp.type == PowerPlantType.GarbageOilHybrid)
-        .map((pp) => pp.cost)
-        .reduce((a, b) => a + b, 0);
-    if (garbageOilUsed > 0) {
-        const coalRemaining = player.coalLeft - coalUsed;
-        const oilRemaining = player.oilLeft - oilUsed;
-        const garbageRemaining = player.garbageLeft - garbageUsed;
-        if (
-            garbageOilUsed > garbageRemaining + oilRemaining ||
-            hybridUsed + garbageOilUsed > coalRemaining + oilRemaining + garbageRemaining
-        ) {
-            return false;
-        }
+    const garbageOilPlants = powerPlants.filter((pp) => pp.type == PowerPlantType.GarbageOilHybrid);
+    const coalRemaining = player.coalLeft - coalUsed;
+    const oilRemaining = player.oilLeft - oilUsed;
+    const garbageRemaining = player.garbageLeft - garbageUsed;
+    const fits = (garbageOilUsed: number) =>
+        garbageOilUsed <= garbageRemaining + oilRemaining &&
+        hybridUsed + garbageOilUsed <= coalRemaining + oilRemaining + garbageRemaining;
+    if (!india) {
+        return fits(garbageOilPlants.map((pp) => pp.cost).reduce((a, b) => a + b, 0));
     }
 
-    return true;
+    // India (ruling R10): each garbage/oil hybrid runs on its printed amount of oil, or
+    // on one more token with at least one garbage. Try every choice.
+    for (let mixed = 0; mixed < Math.pow(2, garbageOilPlants.length); mixed++) {
+        const withGarbage = garbageOilPlants.filter((_, i) => mixed & Math.pow(2, i));
+        const oilOnly = garbageOilPlants.filter((_, i) => !(mixed & Math.pow(2, i)));
+        const oilOnlyUsed = oilOnly.map((pp) => pp.cost).reduce((a, b) => a + b, 0);
+        const withGarbageUsed = withGarbage.map((pp) => pp.cost + 1).reduce((a, b) => a + b, 0);
+        if (
+            oilOnlyUsed <= oilRemaining &&
+            withGarbage.length <= garbageRemaining &&
+            fits(oilOnlyUsed + withGarbageUsed)
+        ) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function toResourcesPhase(G: GameState) {

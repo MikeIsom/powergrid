@@ -144,4 +144,27 @@ describe('Rule fixes', () => {
         expect(G.actualMarket.length).to.equal(6);
         expect(G.futureMarket).to.be.empty;
     });
+
+    it('F7: puts a first house only in an empty city, in every step', () => {
+        for (const variant of variants) {
+            for (const step of [2, 3]) {
+                const G = setup(3, { map: 'Germany', variant }, 'f7');
+                G.phase = Phase.Building;
+                G.step = step;
+                const [occupied, empty] = G.map.cities;
+                G.players[1].cities = [{ name: occupied.name, position: 0 }];
+                const prices = buildPrices(G, 0);
+                expect(prices.get(occupied.name), `${variant} step ${step}`).to.be.undefined;
+                expect(prices.get(empty.name), `${variant} step ${step}`).to.equal(10);
+            }
+        }
+    });
+
+    it('F7: still lets a first house share a Japan starting city', () => {
+        const G = setup(3, { map: 'Japan', variant: 'recharged' }, 'f7-japan');
+        G.phase = Phase.Building;
+        const start = G.map.startingCities!.find((name) => G.map.cities.some((c) => c.name == name))!;
+        G.players[1].cities = [{ name: start, position: 0 }];
+        expect(buildPrices(G, 0).get(start)).to.equal(10);
+    });
 });

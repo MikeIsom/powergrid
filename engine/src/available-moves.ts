@@ -559,6 +559,15 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     }
                     const othersCount = G.players.filter((p) => p.cities.find((c) => city.name == c.name)).length;
 
+                    // A player's first house goes in an empty city, in every step:
+                    // base-recharged.pdf p.5 ("any empty city") and base-original-2013.pdf p.4
+                    // ("any city (not already chosen by another player)"). Japan's starting
+                    // cities have two first-house spaces (maps-russia-japan.pdf p.2).
+                    if (player.cities.length == 0 && othersCount > 0 && !japanStartingCities.has(city.name)) {
+                        city.price = 9999;
+                        return;
+                    }
+
                     // Transregional cities (e.g. Strasbourg on Baden-Württemberg) are only open
                     // in Step 2 onward. The slot fee is replaced by a flat 15 (Step 2) or 20
                     // (Step 3); the dijkstra connection cost from the player's existing network

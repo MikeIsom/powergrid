@@ -1055,29 +1055,7 @@ export function move(
                                 G.map.name != 'Middle East' &&
                                 G.map.name != 'Manhattan'
                             ) {
-                                const powerPlant = G.actualMarket.shift()!;
-                                startStep(G, 2, `Starting Step 2, Power Plant ${powerPlant?.number} discarded.`);
-
-                                // Spain & Portugal: put plants 18, 22 and 27 on top
-                                if (G.map.name == 'Spain & Portugal') {
-                                    if (!G.powerPlantsDeck.find((p) => p.number == 18)) {
-                                        G.powerPlantsDeck.unshift(getPowerPlant(27));
-                                        G.powerPlantsDeck.unshift(getPowerPlant(22));
-                                        G.powerPlantsDeck.unshift(getPowerPlant(18));
-                                    }
-                                }
-
-                                if (G.map.name == 'Europe') {
-                                    // Europe: do NOT draw a replacement from the deck.
-                                    // The future market shrinks from 5 to 4; reorganize
-                                    // the remaining 8 plants so actual stays at 4.
-                                    const market = [...G.actualMarket, ...G.futureMarket];
-                                    market.sort((a, b) => a.number - b.number);
-                                    G.actualMarket = market.slice(0, 4);
-                                    G.futureMarket = market.slice(4);
-                                } else {
-                                    addPowerPlant(G);
-                                }
+                                enterStepTwo(G);
                             }
                         }
 
@@ -2298,10 +2276,20 @@ export function addPowerPlant(G: GameState): void {
         if (powerPlant.number == 99) {
             if (G.powerPlantDeckAfterStep3) {
                 G.powerPlantsDeck = G.powerPlantDeckAfterStep3;
-            } else if (G.map.name == 'China') {
-                startStep(G, 3);
-            } else {
+            } else if (G.map.name != 'China') {
                 G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
+            }
+
+            // Step 3 before Step 2: first make the Step 2 changes, then continue with
+            // Step 3's (base-recharged.pdf p.8; both variants, every map). A card drawn
+            // in an auction waits for the end of the phase (toResourcesPhase). Middle
+            // East's first Step 3 card starts Step 2 instead.
+            if (G.step == 1 && G.phase != Phase.Auction && G.map.name != 'Middle East') {
+                enterStepTwo(G, 'Starting Step 2 before Step 3');
+            }
+
+            if (G.map.name == 'China' && !G.powerPlantDeckAfterStep3) {
+                startStep(G, 3);
             }
 
             if (G.phase != Phase.Auction) {
@@ -2314,12 +2302,6 @@ export function addPowerPlant(G: GameState): void {
                     enterStepTwoMiddleEast(G);
                     skipAdd = true;
                 } else {
-                    if (G.map.name == 'UK & Ireland' && G.step == 1) {
-                        // UK&I: Step 3 sits 3rd from last in the deck, so it can
-                        // surface before any player hits citiesToStep2. Fire Step
-                        // 2 here so its rules register before Step 3 takes over.
-                        startStep(G, 2, 'Starting Step 2 (Step 3 card drawn before Step 2 threshold).');
-                    }
                     const powerPlantDiscarded = G.actualMarket.shift();
                     G.log.push({
                         type: 'event',
@@ -2583,6 +2565,34 @@ function removePlantsForMiddleEastStep1(G: GameState) {
         plantToRemove = G.actualMarket.find(
             (pp: PowerPlant) => pp.type == PowerPlantType.Garbage || pp.type == PowerPlantType.Uranium
         );
+    }
+}
+
+// The start of Step 2: remove the lowest plant once and replace it
+// (base-recharged.pdf p.7, base-original-2013.pdf p.6), with the maps' own changes.
+function enterStepTwo(G: GameState, reason = 'Starting Step 2') {
+    const powerPlant = G.actualMarket.shift()!;
+    startStep(G, 2, `${reason}, Power Plant ${powerPlant?.number} discarded.`);
+
+    // Spain & Portugal: put plants 18, 22 and 27 on top
+    if (G.map.name == 'Spain & Portugal') {
+        if (!G.powerPlantsDeck.find((p) => p.number == 18)) {
+            G.powerPlantsDeck.unshift(getPowerPlant(27));
+            G.powerPlantsDeck.unshift(getPowerPlant(22));
+            G.powerPlantsDeck.unshift(getPowerPlant(18));
+        }
+    }
+
+    if (G.map.name == 'Europe') {
+        // Europe: do NOT draw a replacement from the deck.
+        // The future market shrinks from 5 to 4; reorganize
+        // the remaining 8 plants so actual stays at 4.
+        const market = [...G.actualMarket, ...G.futureMarket];
+        market.sort((a, b) => a.number - b.number);
+        G.actualMarket = market.slice(0, 4);
+        G.futureMarket = market.slice(4);
+    } else {
+        addPowerPlant(G);
     }
 }
 
@@ -2947,6 +2957,10 @@ function toResourcesPhase(G: GameState) {
         if (G.map.name == 'Middle East' && G.step == 1) {
             enterStepTwoMiddleEast(G);
         } else {
+            // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
+            if (G.step == 1) {
+                enterStepTwo(G, 'Starting Step 2 before Step 3');
+            }
             const powerPlantDiscarded = G.actualMarket.shift();
             G.futureMarket.pop();
             startStep(G, 3, `Starting Step 3, Power Plant ${powerPlantDiscarded?.number} discarded.`);

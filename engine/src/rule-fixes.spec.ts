@@ -105,4 +105,43 @@ describe('Rule fixes', () => {
         addPowerPlant(G);
         expect(G.actualMarket.map((p) => p.number)).to.deep.equal([8, 11, 12, 13]);
     });
+
+    it('F6: makes the Step 2 changes first when the Step 3 card is drawn in Step 1', () => {
+        for (const variant of variants) {
+            const G = setup(4, { map: 'USA', variant }, 'f6');
+            G.phase = Phase.Bureaucracy;
+            G.actualMarket = plants(10, 11, 12, 13);
+            G.futureMarket = plants(14, 15, 16);
+            G.powerPlantsDeck = plants(99, 20, 30, 40);
+            addPowerPlant(G);
+            const events = G.log.map((l) => (l.type == 'event' ? l.event : ''));
+            expect(events, variant).to.include('Starting Step 2 before Step 3, Power Plant 10 discarded.');
+            expect(events, variant).to.include('Step 3 will begin next phase, Power Plant 11 discarded.');
+            expect(G.step, variant).to.equal(2);
+            expect(G.actualMarket.length, variant).to.equal(6);
+            expect(
+                G.actualMarket.slice(0, 5).map((p) => p.number),
+                variant
+            ).to.deep.equal([12, 13, 14, 15, 16]);
+        }
+    });
+
+    it('F6: makes the Step 2 changes first when the Step 3 card is drawn in a Step 1 auction', () => {
+        let G = setup(4, { map: 'USA', variant: 'recharged' }, 'f6-auction');
+        G.round = 2;
+        G.plantDiscountActive = false;
+        G.actualMarket = plants(10, 11, 12, 13);
+        G.futureMarket = plants(14, 15, 16);
+        G.powerPlantsDeck = plants(99, 20, 30, 40);
+        addPowerPlant(G);
+        expect(G.futureMarket.map((p) => p.number)).to.include(99);
+        G = passPhase(G);
+        const events = G.log.map((l) => (l.type == 'event' ? l.event : ''));
+        expect(events).to.include('Starting Step 2 before Step 3, Power Plant 10 discarded.');
+        expect(events).to.include('Starting Step 3, Power Plant 11 discarded.');
+        expect(G.step).to.equal(3);
+        expect(G.phase).to.equal(Phase.Resources);
+        expect(G.actualMarket.length).to.equal(6);
+        expect(G.futureMarket).to.be.empty;
+    });
 });

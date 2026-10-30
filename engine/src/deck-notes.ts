@@ -26,6 +26,9 @@ export interface DeckNote {
     boxByPlayers?: Record<number, number[]>;
     // Manhattan: plug cards boxed at random before the rest go on top of the stack.
     boxPlugs?: number;
+    // Northern Europe: for a region in play, the deck's plants boxed when it adds its two
+    // plants (by default the plants with the same numbers).
+    regional?: Record<string, { box: number[] }>;
 }
 
 // Boxed for every map. Set 1: 52, 54, 57 and 60 (plants-new-power-plants-set1.pdf p.2).
@@ -50,6 +53,10 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [8] },
         'South Africa': { box: [7] },
         Quebec: { market: [11, 15, 16] },
+        // Sweden North (yellow) boxes Set 1's 21 and 26, the Baltic States (pink) its 19
+        // and 22; every other region the plants with its plants' numbers. Sweden North's
+        // 25 joins Set 1's 25 as 25.1.
+        'Northern Europe': { regional: { yellow: { box: [21, 26] }, pink: { box: [19, 22] } } },
         China: {
             boxByPlayers: {
                 2: [1, 2, 8, 12, 15, 22, 27, 28, 32, 36, 42],
@@ -95,6 +102,7 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [13] },
         'South Africa': { box: [10] },
         Quebec: { market: [11], topOfStack: [17, 24] },
+        'Northern Europe': noChanges,
         China: {
             boxByPlayers: {
                 2: [3, 6, 10, 13, 17, 18, 25, 26, 31, 34, 35],

@@ -300,6 +300,7 @@ describe('Rule fixes', () => {
             type: PowerPlantType.Wind,
             cost: 0,
             citiesPowered: 5,
+            plug: false,
         });
         try {
             for (const region of Object.keys(regional)) regional[region] = [...regional[region], extra(region)];

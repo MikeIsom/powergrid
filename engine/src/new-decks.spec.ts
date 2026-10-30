@@ -416,4 +416,77 @@ describe('New power plant decks', () => {
             }
         }
     });
+
+    // A Northern Europe game at 5 players (no player-count removal) with these regions in play.
+    const northernEurope = (deck: 'set1' | 'set2', regions: string[]) => {
+        for (let seed = 0; seed < 500; seed++) {
+            const G = setup(5, { map: 'Northern Europe', variant: 'recharged', plantDeck: deck }, `ne-${seed}`);
+            const inPlay = new Set(G.map.cities.map((c) => c.region));
+            if (regions.every((r) => inPlay.has(r))) return G;
+        }
+        throw new Error(`no seed with ${regions}`);
+    };
+    const plant = (G: GameState, n: number) => inGame(G).filter((p) => p.number == n);
+
+    it('swaps Northern Europe regional plants into Set 1 as its notes say', () => {
+        // Denmark (orange), Sweden North (yellow) and the Baltic States (pink).
+        const G = northernEurope('set1', ['orange', 'yellow', 'pink']);
+        // Denmark's oil 19 and 26 replace Set 1's; Sweden North and the Baltic States box
+        // Set 1's 26 and 19 again, which leaves Denmark's alone.
+        expect(plant(G, 19).map((p) => p.type)).to.deep.equal([PowerPlantType.Oil]);
+        expect(plant(G, 26).map((p) => p.type)).to.deep.equal([PowerPlantType.Oil]);
+        // Sweden North: wind 21 replaces Set 1's 21; its uranium 25 joins Set 1's oil 25 as 25.1.
+        expect(plant(G, 21).map((p) => p.type)).to.deep.equal([PowerPlantType.Wind]);
+        expect(plant(G, 25).map((p) => p.type)).to.deep.equal([PowerPlantType.Oil]);
+        expect(plant(G, 25.1).map((p) => [p.type, p.cost, p.citiesPowered])).to.deep.equal([
+            [PowerPlantType.Uranium, 1, 4],
+        ]);
+        // Baltic States: oil 18 is new to Set 1, wind 22 replaces Set 1's 22.
+        expect(plant(G, 18).map((p) => p.type)).to.deep.equal([PowerPlantType.Oil]);
+        expect(plant(G, 22).map((p) => p.type)).to.deep.equal([PowerPlantType.Wind]);
+    });
+
+    it('swaps Northern Europe regional plants into Set 2 by number, with no fractional plant', () => {
+        const G = northernEurope('set2', ['yellow', 'pink']);
+        expect(plant(G, 25).map((p) => p.type)).to.deep.equal([PowerPlantType.Uranium]);
+        expect(plant(G, 25.1)).to.be.empty;
+        expect(plant(G, 18).map((p) => p.type)).to.deep.equal([PowerPlantType.Oil]);
+        expect(inGame(G).every((p) => Number.isInteger(p.number))).to.be.true;
+    });
+
+    it("puts Norway's 07 and Sweden South's 10 among the plug cards with both decks", () => {
+        for (const deck of ['set1', 'set2'] as const) {
+            const G = northernEurope(deck, ['red', 'purple']);
+            expect(
+                plant(G, 7).map((p) => [p.type, p.plug]),
+                deck
+            ).to.deep.equal([[PowerPlantType.Wind, true]]);
+            expect(
+                plant(G, 10).map((p) => [p.type, p.plug]),
+                deck
+            ).to.deep.equal([[PowerPlantType.Uranium, true]]);
+        }
+    });
+
+    it('plays a game with both 25s: 25.1 bids from 25, shows as 25 and sorts just above 25', () => {
+        let G = northernEurope('set1', ['yellow']);
+        const both = inGame(G).filter((p) => Math.floor(p.number) == 25);
+        G.round = 2;
+        G.plantDiscountActive = false;
+        G.actualMarket = [...G.actualMarket.slice(0, 2), ...both];
+        G.futureMarket = [...G.futureMarket];
+        expect(numbers(G.actualMarket).slice(2)).to.deep.equal([25, 25.1]);
+        const p = G.currentPlayers[0];
+        G.players[p].money = 100;
+        // A city in Sweden, so the nuclear 25.1 may be bought.
+        G.players[p].cities = [{ name: G.map.cities.find((c) => c.region == 'yellow')!.name, position: 0 }];
+        G.players[p].availableMoves = availableMoves(G, G.players[p]);
+        expect(G.players[p].availableMoves!.ChoosePowerPlant).to.include.members([25, 25.1]);
+        G = move(G, { name: MoveName.ChoosePowerPlant, data: 25.1 }, p);
+        expect(G.chosenPowerPlant!.type).to.equal(PowerPlantType.Uranium);
+        expect(G.minimunBid).to.equal(25);
+        const chose = G.log.filter((l) => l.type == 'move').pop()!;
+        expect(chose.type == 'move' && chose.simple).to.contain('chooses Power Plant 25');
+        expect(chose.type == 'move' && chose.simple).not.to.contain('25.1');
+    });
 });

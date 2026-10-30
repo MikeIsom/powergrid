@@ -317,6 +317,11 @@ export function faceValue(plant: PowerPlant): number {
     return Math.floor(plant.number);
 }
 
+// How a plant's number is shown: its face value, with the printed "+" if any.
+export function plantLabel(plant: PowerPlant | undefined): string {
+    return plant ? `${faceValue(plant)}${plant.plus ? '+' : ''}` : String(plant);
+}
+
 // States saved before cards carried the plug flag hold only standard-deck cards,
 // whose plug cards are exactly 03–15.
 export function hasPlug(plant: PowerPlant): boolean {

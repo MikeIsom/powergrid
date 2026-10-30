@@ -21,6 +21,7 @@ import {
     countHeldPowerPlants,
     GameOptions,
     GameState,
+    hasPlug,
     isEcological,
     isUraniumMine,
     MapName,
@@ -519,7 +520,7 @@ export function setup(
     if (G.map.name == 'Middle East') {
         removePlantsForMiddleEastStep1(G);
         G.cardsLeft = G.powerPlantsDeck.length;
-        G.nextCardWeak = variant === 'recharged' && G.cardsLeft > 0 && G.powerPlantsDeck[0].number <= 15;
+        G.nextCardWeak = variant === 'recharged' && G.cardsLeft > 0 && hasPlug(G.powerPlantsDeck[0]);
     }
 
     // chooseRegions: start in the region draft instead of the auction. The map
@@ -1901,7 +1902,7 @@ export function move(
         : move;
 
     G.cardsLeft = G.powerPlantsDeck.length;
-    G.nextCardWeak = G.options.variant == 'recharged' && G.cardsLeft > 0 && G.powerPlantsDeck[0].number <= 15;
+    G.nextCardWeak = G.options.variant == 'recharged' && G.cardsLeft > 0 && hasPlug(G.powerPlantsDeck[0]);
 
     updateClocks(G, move.poweringClock?.at ?? move.serverTime ?? move.time);
     if (move.poweringClock) {
@@ -2613,7 +2614,8 @@ export function applyManhattanDepletionOnEmptyDeck(G: GameState): void {
 }
 
 // During step 1 for the Middle East map, we remove garbage and uranium plants from the actual market.
-// If the number is 6, 11, or 14, the plant is removed from the game. Otherwise, it's put under the deck.
+// A plant with a plug on the back is removed from the game; a bigger one is put under the deck
+// (maps-middle-east-south-africa.pdf p.2). In the standard deck these are plants 6, 11 and 14.
 function removePlantsForMiddleEastStep1(G: GameState) {
     let plantToRemove: PowerPlant | undefined = G.actualMarket.find(
         (pp: PowerPlant) => pp.type == PowerPlantType.Garbage || pp.type == PowerPlantType.Uranium
@@ -2622,7 +2624,7 @@ function removePlantsForMiddleEastStep1(G: GameState) {
     while (plantToRemove) {
         removePowerPlant(G, plantToRemove);
 
-        if ([6, 11, 14].includes(plantToRemove.number)) {
+        if (hasPlug(plantToRemove)) {
             G.log.push({
                 type: 'event',
                 event: `Removing Power Plant ${plantToRemove.number} from game.`,

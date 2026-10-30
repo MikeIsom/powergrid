@@ -91,6 +91,9 @@ export interface PowerPlant {
     cost: number;
     citiesPowered: number;
     storage?: number;
+    // A plug on the card's back: the weak plants used for the opening market and
+    // the "next card is weak" hint (standard and Set 2: 03–15, Set 1: 01–16).
+    plug?: boolean;
 }
 
 export interface CityPosition {
@@ -294,6 +297,18 @@ export interface GameState {
 // deck setup), so the type check alone identifies them.
 export function isUraniumMine(G: GameState, plant: PowerPlant): boolean {
     return G.map.name === 'Australia' && plant.type === PowerPlantType.Uranium;
+}
+
+// The number printed on the card. Plant numbers are identities and may be fractional
+// to keep two cards with the same printed number apart (25.1 sorts just above 25).
+export function faceValue(plant: PowerPlant): number {
+    return Math.floor(plant.number);
+}
+
+// States saved before cards carried the plug flag hold only standard-deck cards,
+// whose plug cards are exactly 03–15.
+export function hasPlug(plant: PowerPlant): boolean {
+    return plant.plug ?? faceValue(plant) <= 15;
 }
 
 // Ecological plants need no fuel: the green wind plants and the blue fusion plant

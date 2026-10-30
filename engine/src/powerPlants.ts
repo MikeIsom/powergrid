@@ -47,6 +47,9 @@ const powerPlants: PowerPlant[] = [
     { number: 99, type: PowerPlantType.Step3, cost: 0, citiesPowered: 6 },
 ];
 
+// Plug on the back: 03–15 in the standard deck.
+powerPlants.forEach((pp) => (pp.plug = pp.number <= 15));
+
 const indiaPowerPlants = cloneDeep(powerPlants).filter((pp) => pp.number != 11);
 // Garbage plants cost one more garbage to run, but have no additional storage.
 indiaPowerPlants.forEach((pp) => {
@@ -104,6 +107,9 @@ const alternatePowerPlants: PowerPlant[] = [
     { number: 50, type: PowerPlantType.Uranium, cost: 2, citiesPowered: 7 },
     { number: 99, type: PowerPlantType.Step3, cost: 0, citiesPowered: 6 },
 ];
+
+// Plug on the back: 03–15, as in the standard deck.
+alternatePowerPlants.forEach((pp) => (pp.plug = pp.number <= 15));
 
 // The maps the alternate deck can be played on. The alternatePowerPlants option is
 // ignored on every other map.

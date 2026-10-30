@@ -330,4 +330,20 @@ describe('Rule fixes', () => {
         addPowerPlant(G);
         expect(G.actualMarket.map((p) => p.number)).to.deep.equal([8, 11, 12]);
     });
+
+    it('C2: prepares Europe under Original with the Original removal counts', () => {
+        const removed: Record<number, number> = { 2: 8, 3: 8, 4: 4, 5: 0, 6: 0 };
+        for (const n of [2, 3, 4, 5, 6]) {
+            const G = setup(n, { map: 'Europe', variant: 'original' }, 'c2');
+            const market = [...G.actualMarket, ...G.futureMarket];
+            expect(market.length, `${n} players`).to.equal(9);
+            expect(
+                market.every((p) => p.number <= 15),
+                `${n} players`
+            ).to.be.true;
+            const inGame = market.length + G.powerPlantsDeck.length - 1;
+            expect(inGame, `${n} players`).to.equal(42 - removed[n]);
+            expect(G.powerPlantsDeck[G.powerPlantsDeck.length - 1].number, `${n} players`).to.equal(99);
+        }
+    });
 });

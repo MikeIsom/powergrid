@@ -389,6 +389,16 @@ export const map: GameMap = {
         const actualMarket = initialPlants.slice(0, 4);
         const futureMarket = initialPlants.slice(4); // 5 plants; plugPool keeps the 4 undrawn cards
 
+        if (variant == 'original') {
+            // The booklet's market and stack (maps-europe-north-america.pdf p.2: no plug
+            // card set on top, Step 3 at the bottom) with the Original removal counts,
+            // face down from the whole stack (base-original-2013.pdf p.7).
+            const removals = numPlayers <= 3 ? 8 : numPlayers == 4 ? 4 : 0;
+            const deck = shuffle(plugPool.concat(socketPool), rng() + '').slice(removals);
+            deck.push(step3);
+            return { actualMarket, futureMarket, powerPlantsDeck: deck };
+        }
+
         let plugToRemove = 0;
         let socketToRemove = 0;
         if (numPlayers == 2) {
@@ -421,6 +431,12 @@ export const map: GameMap = {
     },
     mapSpecificRules:
         'When Step 2 begins, remove the lowest-numbered plant from the current market from the game once and do not replace it; the future market then has 4 plants instead of 5.\n',
-    deckBuild:
-        'Europe uses the New Power Plants Set 2 deck (cards with a plug on the back). The power plant market starts as 4 current + 5 future power plants (9 total), all drawn from the plug plants; the top card of the draw deck is never a plug plant.',
+    deckBuild: {
+        recharged:
+            'Europe uses the New Power Plants Set 2 deck (cards with a plug on the back). The power plant market starts as 4 current + 5 future power plants (9 total), all drawn from the plug plants; the top card of the draw deck is never a plug plant.',
+        original:
+            'the power plant market starts as 4 current + 5 future power plants (9 total), drawn at random ' +
+            'from the plug plants. No plant is set on top of the stack. Removal by player count: 8 plants ' +
+            'with 2 or 3 players, 4 with 4 players, none with 5 or 6.',
+    },
 };

@@ -361,4 +361,18 @@ describe('Rule fixes', () => {
             ).to.deep.equal([36, 38, 39, 40, 50]);
         }
     });
+
+    it('C4: deals the lowest plants, one per player, in the China round 1 market', () => {
+        for (const variant of variants) {
+            for (const n of [2, 3, 4, 5, 6]) {
+                const G = setup(n, { map: 'China', variant }, 'c4');
+                const expected = [5, 6, 7, 8, 9, 10].slice(0, n);
+                expect(
+                    G.actualMarket.map((p) => p.number),
+                    `${variant}, ${n} players`
+                ).to.deep.equal(expected);
+                expect(G.futureMarket, `${variant}, ${n} players`).to.be.empty;
+            }
+        }
+    });
 });

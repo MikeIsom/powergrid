@@ -1,10 +1,12 @@
 import { expect } from 'chai';
+import { readFileSync } from 'fs';
 import 'mocha';
+import { join } from 'path';
 import { availableMoves } from './available-moves';
 import { addPowerPlant, getPowerPlant, move, setup, updatePlayerCapacity } from './engine';
 import { GameOptions, GameState, Phase, ResourceType } from './gamestate';
 import { MoveName } from './move';
-import { rulesApply } from './rule-versions';
+import { rulesApply, ruleVersions } from './rule-versions';
 
 const plants = (...numbers: number[]) => numbers.map((n) => getPowerPlant(n));
 
@@ -23,6 +25,14 @@ describe('Rule versions', () => {
     it('stores the version option only when it is set', () => {
         expect(setup(3, { map: 'USA' }, 'versions').options).not.to.have.property('version');
         expect(setup(3, { map: 'USA', version: 3 }, 'versions').options.version).to.equal(3);
+    });
+
+    it('lists every gated change and its version in the engine README', () => {
+        const readme = readFileSync(join(__dirname, '..', 'README.md'), 'utf8');
+        const listed: Record<string, number> = {};
+        const row = /^\|\s*`(\w+)`\s*\|.*\|\s*(\d+)\s*\|\s*$/gm;
+        for (let m = row.exec(readme); m; m = row.exec(readme)) listed[m[1]] = Number(m[2]);
+        expect(listed).to.deep.equal(ruleVersions);
     });
 
     it('applies every change to a game without a version', () => {

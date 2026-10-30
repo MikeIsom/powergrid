@@ -2264,7 +2264,10 @@ export function addPowerPlant(G: GameState): void {
             }
         }
 
-        if (G.options.variant == 'original' && G.map.name != 'China') {
+        // base-original-2013.pdf p.5: a drawn plant at or below any player's city count
+        // is removed and replaced. Baden-Württemberg never removes such plants
+        // (maps-quebec-baden-wurttemberg.pdf p.2, ruling R6).
+        if (G.options.variant == 'original' && G.map.name != 'China' && G.map.name != 'Baden-Württemberg') {
             const maxCities = Math.max(...G.players.map((p) => p.cities.length));
             while (powerPlant.number <= maxCities) {
                 G.log.push({

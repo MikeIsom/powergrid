@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
-import { getPowerPlant, move, setup } from './engine';
+import { addPowerPlant, getPowerPlant, move, setup } from './engine';
 import { GameState, Phase, Variant } from './gamestate';
 import { MoveName } from './move';
 
@@ -94,5 +94,15 @@ describe('Rule fixes', () => {
         // Germany's phase-out is a Recharged rule only.
         expect(uraniumAfterBureaucracy('Germany', 'recharged', true)).to.equal(0);
         expect(uraniumAfterBureaucracy('Germany', 'original', true)).to.be.above(0);
+    });
+
+    it('F5: never removes a Baden-Württemberg plant for city count, also when drawn', () => {
+        const G = setup(3, { map: 'Baden-Württemberg', variant: 'original' }, 'f5');
+        G.players[0].cities = G.map.cities.slice(0, 10).map((c) => ({ name: c.name, position: 0 }));
+        G.actualMarket = plants(11, 12, 13);
+        G.futureMarket = plants(14, 15, 16, 17);
+        G.powerPlantsDeck = plants(8, 20);
+        addPowerPlant(G);
+        expect(G.actualMarket.map((p) => p.number)).to.deep.equal([8, 11, 12, 13]);
     });
 });

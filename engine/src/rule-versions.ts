@@ -31,6 +31,8 @@ export const ruleVersions = {
     france2pSocketRemovals: 14,
     // Europe, Original: the Original removal counts (C2).
     europeOriginalRemovals: 14,
+    // Benelux: fusion plant 50 counts as ecological (C5).
+    beneluxFusionEcological: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

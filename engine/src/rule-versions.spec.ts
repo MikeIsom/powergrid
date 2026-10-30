@@ -189,4 +189,18 @@ describe('Rule versions', () => {
         expect(inGame(13)).to.equal(36);
         expect(inGame(14)).to.equal(34);
     });
+
+    it('beneluxFusionEcological: moves Benelux plant 50 into the current market from version 14', () => {
+        const market = (version: number) => {
+            const G = setup(3, { map: 'Benelux', variant: 'recharged', version }, 'versions');
+            G.step = 2;
+            G.actualMarket = plants(36, 38, 39);
+            G.futureMarket = plants(50);
+            G.powerPlantsDeck = plants(40, 42);
+            addPowerPlant(G);
+            return G.actualMarket.map((p) => p.number);
+        };
+        expect(market(13)).to.deep.equal([36, 38, 39, 40]);
+        expect(market(14)).to.deep.equal([36, 38, 39, 40, 50]);
+    });
 });

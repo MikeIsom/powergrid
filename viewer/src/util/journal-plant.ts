@@ -13,7 +13,12 @@ export function journalPlant(state: GameState, number: number): PowerPlant | und
 
     // Discarded cards still appear in the journal; reconstruct the regional deck
     // using the same region order as setup, without needing the hidden draw pile.
-    const catalogue = plantCatalogue(state.map.name, !!state.options.alternatePowerPlants, state.options.plantDeck);
+    const catalogue = plantCatalogue(
+        state.map.name,
+        !!state.options.alternatePowerPlants,
+        state.options.plantDeck,
+        state.shuffledDeck
+    );
     const regions = new Set(state.map.cities.map((city) => city.region));
     return withRegionalPlants(catalogue, state.map, regions, state.options.plantDeck).find(
         (card) => card.number === number

@@ -1,5 +1,6 @@
 import { cloneDeep } from 'lodash';
-import { PlantDeck, PowerPlant, PowerPlantType } from './gamestate';
+import seedrandom from 'seedrandom';
+import { CardDeck, PlantDeck, PowerPlant, PowerPlantType } from './gamestate';
 
 const powerPlants: PowerPlant[] = [
     { number: 3, type: PowerPlantType.Oil, cost: 2, citiesPowered: 1 },
@@ -184,9 +185,51 @@ function withIndiaGarbage(deck: PowerPlant[]): PowerPlant[] {
 const indiaSet1 = withIndiaGarbage(set1PowerPlants);
 const indiaSet2 = withIndiaGarbage(alternatePowerPlants);
 
+const cardDecks: Record<CardDeck, PowerPlant[]> = {
+    standard: powerPlants,
+    // 52, 54, 57 and 60 never join a shuffled deck.
+    set1: set1PowerPlants.filter((p) => ![52, 54, 57, 60].includes(p.number)),
+    set2: alternatePowerPlants,
+};
+
+// The shuffled deck (engine-update-scope.md, Part 6): for each plant number, one card
+// picked at random from the decks that print it, so 01 and 02 always come from Set 1
+// and 17 and 18 never do.
+function shuffledPicks(rng: seedrandom.prng): Record<number, CardDeck> {
+    const decks = Object.keys(cardDecks) as CardDeck[];
+    const numbers = [...new Set(([] as number[]).concat(...decks.map((d) => cardDecks[d].map((p) => p.number))))]
+        .filter((n) => n != 99)
+        .sort((a, b) => a - b);
+    const picks: Record<number, CardDeck> = {};
+    for (const n of numbers) {
+        const printing = decks.filter((d) => cardDecks[d].some((p) => p.number == n));
+        picks[n] = printing[Math.floor(rng() * printing.length)];
+    }
+    return picks;
+}
+
+// The cards of a shuffled deck, each keeping its own plug flag, with one Step 3 card.
+function shuffledCards(picks: Record<number, CardDeck>): PowerPlant[] {
+    const cards = Object.entries(picks).map(([n, deck]) => ({
+        ...cardDecks[deck].find((p) => p.number == Number(n))!,
+        origin: deck,
+    }));
+    return [...cards.sort((a, b) => a.number - b.number), powerPlants.find((p) => p.number == 99)!];
+}
+
 // The full card list a game on this map draws from. Set 1 and Set 2 (plantDeck) are
-// the whole cards of their sets; the map notes decide which of them are used.
-function plantCatalogue(mapName: string, alternate?: boolean, plantDeck?: PlantDeck): PowerPlant[] {
+// the whole cards of their sets, and a shuffled deck the cards picked for it; the map
+// notes decide which of them are used.
+function plantCatalogue(
+    mapName: string,
+    alternate?: boolean,
+    plantDeck?: PlantDeck,
+    shuffledDeck?: Record<number, CardDeck>
+): PowerPlant[] {
+    if (plantDeck == 'shuffled' && shuffledDeck) {
+        const cards = shuffledCards(shuffledDeck);
+        return mapName == 'India' ? withIndiaGarbage(cards) : cards;
+    }
     if (plantDeck == 'set1') {
         return mapName == 'India' ? indiaSet1 : set1PowerPlants;
     }
@@ -205,6 +248,7 @@ export {
     indiaPowerPlants,
     alternatePowerPlants,
     set1PowerPlants,
+    shuffledPicks,
     ALTERNATE_DECK_MAPS,
     usesAlternateDeck,
     plantCatalogue,

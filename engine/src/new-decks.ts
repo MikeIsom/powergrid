@@ -1,5 +1,5 @@
 import seedrandom from 'seedrandom';
-import { deckBox, deckNote, NewDeck } from './deck-notes';
+import { deckBox, deckNote, NewDeck, shuffledNote } from './deck-notes';
 import { faceValue, hasPlug, PowerPlant, PowerPlantType } from './gamestate';
 import { GameMap } from './maps';
 import { shuffle } from './utils';
@@ -69,18 +69,20 @@ export interface PreparedDeck {
     stepTwoTopPlants?: PowerPlant[];
 }
 
-// Prepares the opening market and stack for Set 1 or Set 2 under Recharged: the
-// deck's map notes first, then the map's own preparation with the cards of the deck.
+// Prepares the opening market and stack for Set 1, Set 2 or a shuffled deck under
+// Recharged: the deck's map notes first, then the map's own preparation with the cards
+// of the deck.
 export function prepareNewDeck(
     map: GameMap,
     numPlayers: number,
-    deck: NewDeck,
+    deck: NewDeck | 'shuffled',
     rng: seedrandom.prng,
     catalogue: PowerPlant[]
 ): PreparedDeck {
-    const note = deckNote(deck, map.name);
+    const note = deck == 'shuffled' ? shuffledNote(map.name, catalogue) : deckNote(deck, map.name);
     const prep = mapPreparation(map.name);
-    const boxed = new Set([...deckBox[deck], ...(note.box ?? []), ...(note.boxByPlayers?.[numPlayers] ?? [])]);
+    const deckWide = deck == 'shuffled' ? [] : deckBox[deck];
+    const boxed = new Set([...deckWide, ...(note.box ?? []), ...(note.boxByPlayers?.[numPlayers] ?? [])]);
     let cards = catalogue.filter((p) => !boxed.has(p.number)).map((p) => ({ ...p }));
 
     // Europe prepares its own market and stack from the plug cards of any deck.
@@ -95,6 +97,7 @@ export function prepareNewDeck(
     };
     const stepTwoTop = take(note.stepTwoTop);
     const topOfStack = take(note.topOfStack);
+    const belowTopPlug = take(note.belowTopPlug);
     const fixedMarket = take(note.market);
     const step3 = cards.find((p) => p.type == PowerPlantType.Step3)!;
     cards = cards.filter((p) => p != step3);
@@ -145,7 +148,12 @@ export function prepareNewDeck(
     plugs = plugs.filter((p) => !isProtected(p)).slice(prep.plugRemovals[numPlayers - 2]);
     sockets = sockets.filter((p) => !isProtected(p)).slice(prep.socketRemovals[numPlayers - 2]);
 
-    const stack = [...topOfStack, ...onTop, ...shuffle([...plugs, ...sockets, ...protectedPlants], rng() + '')];
+    const stack = [
+        ...topOfStack,
+        ...onTop,
+        ...belowTopPlug,
+        ...shuffle([...plugs, ...sockets, ...protectedPlants], rng() + ''),
+    ];
     stack.splice(stack.length - prep.belowStepThree, 0, step3);
 
     return {

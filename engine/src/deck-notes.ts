@@ -3,7 +3,8 @@
 // plants-new-power-plants-set2-map-notes.md (Mike Isom's transcription). Plant
 // numbers are the printed numbers. A deck/map pair without a note cannot be set up.
 
-import { GameOptions } from './gamestate';
+import { CardDeck, faceValue, GameOptions, GameState, PowerPlant, PowerPlantType } from './gamestate';
+import { alternatePowerPlants } from './powerPlants';
 
 export type NewDeck = 'set1' | 'set2';
 
@@ -16,6 +17,8 @@ export interface DeckNote {
     protect?: number[];
     // Set aside, then put on top of the stack once it is prepared, top first.
     topOfStack?: number[];
+    // Set aside, then put directly below the plug card on top of the stack, top first.
+    belowTopPlug?: number[];
     // Set aside, then put on top of the stack at the start of Step 2, top first.
     stepTwoTop?: number[];
     // Uranium resupply stops once a player buys this plant (Germany, Italy).
@@ -135,6 +138,61 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
     },
 };
 
+// The standard deck's own map rules as notes, for its cards in a shuffled deck: the map
+// booklets' plant numbers, as the engine's standard Recharged setups use them.
+export const standardNotes: Record<string, DeckNote> = {
+    USA: noChanges,
+    Germany: { uraniumStop: 39 }, // base-recharged.pdf p.7
+    Italy: { uraniumStop: 39 }, // maps-france-italy.pdf p.2
+    France: { box: [13], market: [11] }, // maps-france-italy.pdf p.2
+    Brazil: { market: [6, 14], protect: [19, 24, 30, 38] }, // maps-brazil-spain-portugal.pdf p.2
+    'Spain & Portugal': { stepTwoTop: [18, 22, 27] }, // maps-brazil-spain-portugal.pdf p.2
+    Russia: { box: [6, 14] }, // maps-russia-japan.pdf p.2
+    Australia: { box: [17] }, // maps-australia-indian-subcontinent.pdf p.2
+    India: { box: [11] }, // maps-australia-indian-subcontinent.pdf p.3
+    'South Africa': { box: [7] }, // maps-middle-east-south-africa.pdf p.2
+    // The engine's Recharged Québec setup: 13 among the plug cards, 18 and 22 below the
+    // plug card on top (maps-quebec-baden-wurttemberg.pdf p.2 sets 13, 18, 22 aside).
+    Quebec: { belowTopPlug: [18, 22] },
+    'Middle East': noChanges,
+    Benelux: noChanges,
+    'Central Europe': noChanges,
+    Korea: noChanges,
+    Japan: noChanges,
+    'UK & Ireland': noChanges,
+    Europe: noChanges,
+    'North America': noChanges,
+    'Baden-Württemberg': noChanges,
+};
+
+// The maps whose notes rebuild the whole deck cannot take a shuffled deck.
+export const SHUFFLED_EXCLUDED_MAPS = ['China', 'Bremen', 'Manhattan', 'Northern Europe'];
+
+function cardDeckNote(deck: CardDeck, mapName: string): DeckNote {
+    if (deck != 'standard') return deckNote(deck, mapName);
+    const note = standardNotes[mapName];
+    if (!note) throw new Error(`There are no standard-deck notes for ${mapName}.`);
+    return note;
+}
+
+// A shuffled deck's notes: each card follows its own deck's notes, so a note's plant
+// applies only when the card with that number comes from the note's deck.
+export function shuffledNote(mapName: string, cards: PowerPlant[]): DeckNote {
+    if (SHUFFLED_EXCLUDED_MAPS.includes(mapName)) {
+        throw new Error(`The shuffled deck cannot be used on ${mapName}, whose map notes rebuild the whole deck.`);
+    }
+    const fields = ['box', 'market', 'protect', 'topOfStack', 'belowTopPlug', 'stepTwoTop'] as const;
+    const merged: DeckNote = {};
+    for (const deck of ['standard', 'set1', 'set2'] as CardDeck[]) {
+        const note = cardDeckNote(deck, mapName);
+        for (const field of fields) {
+            const numbers = (note[field] ?? []).filter((n) => cards.find((c) => c.number == n)?.origin == deck);
+            if (numbers.length) merged[field] = [...(merged[field] ?? []), ...numbers].sort((a, b) => a - b);
+        }
+    }
+    return merged;
+}
+
 // The plant whose purchase stops uranium resupply on Germany and Italy: 39 in the
 // standard deck, else the plant the deck's map notes name (if any).
 export function uraniumStopPlant(options: GameOptions, mapName: string): number | undefined {
@@ -142,8 +200,32 @@ export function uraniumStopPlant(options: GameOptions, mapName: string): number 
     return deck == 'set1' || deck == 'set2' ? deckNotes[deck][mapName]?.uraniumStop : 39;
 }
 
-export function noGarbageInStepOne(options: GameOptions, mapName: string): boolean {
+// Whether buying this plant stops uranium resupply. In a shuffled deck any plant named
+// by its own deck's notes does, so the first of them bought stops it (owner's ruling).
+export function isUraniumStopPlant(G: GameState, plant: PowerPlant): boolean {
+    if (G.options.plantDeck == 'shuffled') {
+        const stop = plant.origin ? cardDeckNote(plant.origin, G.map.name).uraniumStop : undefined;
+        return stop !== undefined && faceValue(plant) === stop;
+    }
+    return faceValue(plant) === uraniumStopPlant(G.options, G.map.name);
+}
+
+// Middle East with Set 2: no garbage in Step 1. In a shuffled deck, whenever one of Set 2's
+// garbage/oil hybrids is in the game (owner's ruling).
+export function noGarbageInStepOne(
+    options: GameOptions,
+    mapName: string,
+    shuffledDeck?: Record<number, CardDeck>
+): boolean {
     const deck = options.plantDeck;
+    if (deck == 'shuffled') {
+        return (
+            !!deckNotes.set2[mapName]?.noGarbageInStepOne &&
+            alternatePowerPlants.some(
+                (p) => p.type == PowerPlantType.GarbageOilHybrid && shuffledDeck?.[p.number] == 'set2'
+            )
+        );
+    }
     return (deck == 'set1' || deck == 'set2') && !!deckNotes[deck][mapName]?.noGarbageInStepOne;
 }
 

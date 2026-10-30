@@ -86,9 +86,6 @@ describe('New power plant decks', () => {
     });
 
     it('rejects decks that are not available yet', () => {
-        expect(() => setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'shuffled' })).to.throw(
-            'not available yet'
-        );
         expect(() => setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'random' })).to.throw('not available yet');
         expect(() => setup(3, { map: 'USA', variant: 'original', plantDeck: 'set1' })).to.throw('Recharged');
     });

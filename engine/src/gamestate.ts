@@ -36,6 +36,8 @@ export type MapName =
     | 'Manhattan';
 export type Variant = 'original' | 'recharged';
 export type PlantDeck = 'standard' | 'set1' | 'set2' | 'shuffled' | 'random';
+// The decks a card can come from.
+export type CardDeck = 'standard' | 'set1' | 'set2';
 
 export interface GameOptions {
     fastBid?: boolean;
@@ -63,6 +65,8 @@ export interface GameOptions {
     // when it is not the standard deck. alternatePowerPlants still means Set 2 on
     // Europe and North America.
     plantDeck?: PlantDeck;
+    // Set by setup when plantDeck was 'random'; plantDeck then holds the deck picked.
+    randomPlantDeck?: boolean;
     // Replaying an old game only: the site engine version it was played under
     // (game.version in a boardgamers.space export). Rule changes newer than this
     // version are not applied (see rule-versions.ts). New games never set it.
@@ -102,6 +106,8 @@ export interface PowerPlant {
     plug?: boolean;
     // Printed with a "+" after the number (Set 1: 46+, 50+, 52+, 54+, 57+, 60+). Display only.
     plus?: boolean;
+    // The deck the card comes from, in a shuffled deck only.
+    origin?: CardDeck;
 }
 
 export interface CityPosition {
@@ -265,6 +271,8 @@ export interface GameState {
     minimunBid: number;
     plantDiscountActive: boolean;
     discountBonusPlayer?: number; // Manhattan: id of the player who bought the discounted plant and may purchase one more this phase.
+    // A shuffled deck: the deck each plant number's card was picked from.
+    shuffledDeck?: Record<number, CardDeck>;
     // Plants put on top of the stack at the start of Step 2, top first (map notes of the
     // new decks, e.g. Spain & Portugal). Undefined once used and in every other game.
     stepTwoTopPlants?: PowerPlant[];

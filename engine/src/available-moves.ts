@@ -450,7 +450,7 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
 
             // Middle East with Set 2: no garbage in Step 1, only oil for the garbage/oil
             // hybrids (plants-new-power-plants-set2-map-notes.md).
-            const garbageClosed = G.step == 1 && noGarbageInStepOne(G.options, G.map.name);
+            const garbageClosed = G.step == 1 && noGarbageInStepOne(G.options, G.map.name, G.shuffledDeck);
             if (allowSouth && G.garbageMarket > 0 && !garbageClosed) {
                 const garbagePrices = G.garbagePrices ?? prices[ResourceType.Garbage];
                 let price = garbagePrices[garbagePrices.length - G.garbageMarket];

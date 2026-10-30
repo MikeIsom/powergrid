@@ -17,7 +17,7 @@ import {
     replacePoweringLog,
     restorePowering,
 } from './choice-revisions';
-import { deckNote, uraniumStopPlant } from './deck-notes';
+import { deckNote, isUraniumStopPlant, SHUFFLED_EXCLUDED_MAPS } from './deck-notes';
 import {
     countHeldPowerPlants,
     faceValue,
@@ -42,7 +42,7 @@ import {
 import { GameMap, maps, mapsRecharged } from './maps';
 import { Move, MoveName, Moves } from './move';
 import { PreparedDeck, prepareNewDeck } from './new-decks';
-import { plantCatalogue, powerPlants, usesAlternateDeck } from './powerPlants';
+import { plantCatalogue, powerPlants, shuffledPicks, usesAlternateDeck } from './powerPlants';
 import prices from './prices';
 import { createRandomizedMap } from './randomizeMap';
 import { rulesApply } from './rule-versions';
@@ -163,18 +163,25 @@ export function setup(
         throw new Error(`Map "${map}" not found for variant "${variant}"`);
     }
     const chosenMap = cloneDeep(chosenMapRaw);
-    if (plantDeck == 'shuffled' || plantDeck == 'random') {
+    if (plantDeck == 'random') {
         throw new Error(`The ${plantDeck} power plant deck is not available yet.`);
     }
     if (plantDeck != 'standard' && variant == 'original') {
         throw new Error('The New Power Plants decks are only available under Recharged rules for now.');
     }
+    if (plantDeck == 'shuffled' && SHUFFLED_EXCLUDED_MAPS.includes(chosenMap.name)) {
+        throw new Error(
+            `The shuffled deck cannot be used on ${chosenMap.name}, whose map notes rebuild the whole deck.`
+        );
+    }
+    // A dedicated rng, so picking the cards doesn't shift the rest of the setup's draws.
+    const shuffledDeck = plantDeck == 'shuffled' ? shuffledPicks(seedrandom(seed + '-shuffled')) : undefined;
     // The alternate deck option is only honoured on the maps that support it, where it
     // is Set 2. Set 2 there is the alternate deck; elsewhere, and Set 1 anywhere, is a
     // new deck prepared with its map notes.
     const alternateDeck = usesAlternateDeck(chosenMap.name, alternatePowerPlants || plantDeck == 'set2');
     const newDeck = plantDeck != 'standard' && !alternateDeck ? plantDeck : undefined;
-    const deck = plantCatalogue(chosenMap.name, alternateDeck, newDeck);
+    const deck = plantCatalogue(chosenMap.name, alternateDeck, newDeck, shuffledDeck);
 
     let actualMarket: PowerPlant[];
     let futureMarket: PowerPlant[];
@@ -209,7 +216,7 @@ export function setup(
         uraniumLeft: 0,
         hybridCapacity: 0,
         hybridLeft: 0,
-        ...(alternateDeck || newDeck == 'set2' ? { garbageOilHybridCapacity: 0 } : {}),
+        ...(deck.some((p) => p.type == PowerPlantType.GarbageOilHybrid) ? { garbageOilHybridCapacity: 0 } : {}),
         money: 50,
         housesLeft: 22,
         cities: [],
@@ -530,6 +537,7 @@ export function setup(
         knownPowerPlantDeck: actualMarket.concat(futureMarket),
         knownPowerPlantDeckStep3: [],
         ...(stepTwoTopPlants ? { stepTwoTopPlants } : {}),
+        ...(shuffledDeck ? { shuffledDeck } : {}),
         powerPlantDeckAfterStep3: undefined,
     } as GameState;
 
@@ -603,7 +611,7 @@ function prepareDeck(
     options: GameOptions,
     catalogue?: PowerPlant[]
 ): PreparedDeck {
-    if (options.plantDeck == 'set1' || options.plantDeck == 'set2') {
+    if (options.plantDeck == 'set1' || options.plantDeck == 'set2' || options.plantDeck == 'shuffled') {
         return prepareNewDeck(map, numPlayers, options.plantDeck, rng, catalogue!);
     }
     return map.setupDeck
@@ -654,7 +662,12 @@ function finalizeRegions(G: GameState) {
     if (mapData.regionalPowerPlants) {
         // The deck is prepared again now that the regions are known, replaying the
         // setup's draws (setup's first use of its rng was the deck preparation).
-        const catalogue = plantCatalogue(mapData.name, G.options.alternatePowerPlants, G.options.plantDeck);
+        const catalogue = plantCatalogue(
+            mapData.name,
+            G.options.alternatePowerPlants,
+            G.options.plantDeck,
+            G.shuffledDeck
+        );
         ({
             actualMarket: G.actualMarket,
             futureMarket: G.futureMarket,
@@ -800,7 +813,7 @@ export function move(
 
             // The uranium stop plant (base-recharged.pdf p.7, maps-france-italy.pdf p.2;
             // with a new deck, its map notes). An auction always ends in a sale.
-            if (faceValue(G.chosenPowerPlant) === uraniumStopPlant(G.options, G.map.name)) {
+            if (isUraniumStopPlant(G, G.chosenPowerPlant)) {
                 G.card39Bought = true;
             }
 

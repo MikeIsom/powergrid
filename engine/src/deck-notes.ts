@@ -8,6 +8,14 @@ export type NewDeck = 'set1' | 'set2';
 export interface DeckNote {
     // Boxed before the market and stack are prepared.
     box?: number[];
+    // Placed in the opening market first; the rest of the market is drawn from the plug cards.
+    market?: number[];
+    // Kept out of the player-count removal, then shuffled back in.
+    protect?: number[];
+    // Set aside, then put on top of the stack once it is prepared, top first.
+    topOfStack?: number[];
+    // Set aside, then put on top of the stack at the start of Step 2, top first.
+    stepTwoTop?: number[];
 }
 
 // Boxed for every map. Set 1: 52, 54, 57 and 60 (plants-new-power-plants-set1.pdf p.2).
@@ -22,6 +30,14 @@ const noChanges: DeckNote = {};
 export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
     set1: {
         USA: noChanges,
+        France: { box: [10], market: [8] },
+        Brazil: { market: [6], protect: [21, 27, 33, 42] },
+        'Spain & Portugal': { stepTwoTop: [15, 16, 26] },
+        Russia: { box: [6, 21] },
+        Australia: { box: [19] },
+        India: { box: [8] },
+        'South Africa': { box: [7] },
+        Quebec: { market: [11, 15, 16] },
         Benelux: noChanges,
         'Central Europe': noChanges,
         Korea: noChanges,
@@ -33,6 +49,14 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
     },
     set2: {
         USA: noChanges,
+        France: { box: [11], market: [13] },
+        Brazil: { market: [5, 14], protect: [16, 19, 26, 39] },
+        'Spain & Portugal': { stepTwoTop: [17, 24, 28] },
+        Russia: { box: [5, 14] },
+        Australia: { box: [21] },
+        India: { box: [13] },
+        'South Africa': { box: [10] },
+        Quebec: { market: [11], topOfStack: [17, 24] },
         Benelux: noChanges,
         'Central Europe': noChanges,
         Korea: noChanges,

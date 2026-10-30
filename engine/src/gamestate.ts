@@ -265,6 +265,9 @@ export interface GameState {
     minimunBid: number;
     plantDiscountActive: boolean;
     discountBonusPlayer?: number; // Manhattan: id of the player who bought the discounted plant and may purchase one more this phase.
+    // Plants put on top of the stack at the start of Step 2, top first (map notes of the
+    // new decks, e.g. Spain & Portugal). Undefined once used and in every other game.
+    stepTwoTopPlants?: PowerPlant[];
     // Middle East: the first Step 3 card was drawn; Step 2 begins at the start of the next phase.
     middleEastStep2Pending?: boolean;
     pendingMarketRefill?: boolean; // A purchase is owed its replacement plant. Set in endAuction, consumed by whichever path finishes the purchase (#67).

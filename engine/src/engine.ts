@@ -37,7 +37,7 @@ import {
 } from './gamestate';
 import { GameMap, maps, mapsRecharged } from './maps';
 import { Move, MoveName, Moves } from './move';
-import { prepareNewDeck } from './new-decks';
+import { PreparedDeck, prepareNewDeck } from './new-decks';
 import { plantCatalogue, powerPlants, usesAlternateDeck } from './powerPlants';
 import prices from './prices';
 import { createRandomizedMap } from './randomizeMap';
@@ -175,13 +175,14 @@ export function setup(
     let actualMarket: PowerPlant[];
     let futureMarket: PowerPlant[];
     let powerPlantsDeck: PowerPlant[];
+    let stepTwoTopPlants: PowerPlant[] | undefined;
 
     if (forceDeck) {
         powerPlantsDeck = forceDeck;
         actualMarket = powerPlantsDeck.splice(0, 4);
         futureMarket = powerPlantsDeck.splice(0, 4);
     } else {
-        ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+        ({ actualMarket, futureMarket, powerPlantsDeck, stepTwoTopPlants } = prepareDeck(
             chosenMap,
             numPlayers,
             variant,
@@ -359,7 +360,7 @@ export function setup(
             finalMap = filterMapToRegions(chosenMap, playRegions);
             if (chosenMap.regionalPowerPlants && !forceDeck) {
                 // A fresh rng on the same seed replays the preparation's own draws.
-                ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+                ({ actualMarket, futureMarket, powerPlantsDeck, stepTwoTopPlants } = prepareDeck(
                     chosenMap,
                     numPlayers,
                     variant,
@@ -524,6 +525,7 @@ export function setup(
         card39Bought: false,
         knownPowerPlantDeck: actualMarket.concat(futureMarket),
         knownPowerPlantDeckStep3: [],
+        ...(stepTwoTopPlants ? { stepTwoTopPlants } : {}),
         powerPlantDeckAfterStep3: undefined,
     } as GameState;
 
@@ -596,7 +598,7 @@ function prepareDeck(
     rng: seedrandom.prng,
     options: GameOptions,
     catalogue?: PowerPlant[]
-) {
+): PreparedDeck {
     if (options.plantDeck == 'set1' || options.plantDeck == 'set2') {
         return prepareNewDeck(map, numPlayers, options.plantDeck, rng, catalogue!);
     }
@@ -2684,8 +2686,12 @@ function enterStepTwo(G: GameState, reason = 'Starting Step 2') {
     const powerPlant = G.actualMarket.shift()!;
     startStep(G, 2, `${reason}, Power Plant ${powerPlant?.number} discarded.`);
 
-    // Spain & Portugal: put plants 18, 22 and 27 on top
-    if (G.map.name == 'Spain & Portugal') {
+    // Spain & Portugal: put plants 18, 22 and 27 on top; with a new deck, the plants
+    // its map notes name.
+    if (G.stepTwoTopPlants) {
+        G.powerPlantsDeck.unshift(...G.stepTwoTopPlants);
+        G.stepTwoTopPlants = undefined;
+    } else if (G.map.name == 'Spain & Portugal') {
         if (!G.powerPlantsDeck.find((p) => p.number == 18)) {
             G.powerPlantsDeck.unshift(getPowerPlant(27));
             G.powerPlantsDeck.unshift(getPowerPlant(22));

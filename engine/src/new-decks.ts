@@ -31,6 +31,15 @@ const standard: MapPreparation = {
 };
 
 const mapPreparations: Record<string, Partial<MapPreparation>> = {
+    // France: no further plug removal with 2 and 4 players, one with 3 (maps-france-italy.pdf p.2).
+    France: { plugRemovals: [0, 1, 0, 0, 0] },
+    // Québec: ecological plants are never removed at random (maps-quebec-baden-wurttemberg.pdf p.2).
+    // Only the green (wind) plants count: base-original-2013.pdf p.4 keeps "Ecological and
+    // Fusion Power Plants" apart (owner's ruling).
+    Quebec: { protect: (p) => p.type == PowerPlantType.Wind },
+    // Russia: a market of 3 + 3, the undrawn plug cards on top of the stack, and only
+    // socket cards removed: 6, 8 and 4 with 2, 3 and 4 players (maps-russia-japan.pdf p.2).
+    Russia: { market: [3, 3], plugsOnTop: 'all', plugRemovals: [0, 0, 0, 0, 0], socketRemovals: [6, 8, 4, 0, 0] },
     // UK & Ireland: two plants below the Step 3 card (maps-northern-europe-uk-ireland.pdf p.2).
     'UK & Ireland': { belowStepThree: 2 },
 };
@@ -43,6 +52,8 @@ export interface PreparedDeck {
     actualMarket: PowerPlant[];
     futureMarket: PowerPlant[];
     powerPlantsDeck: PowerPlant[];
+    // Put on top of the stack at the start of Step 2, top first.
+    stepTwoTopPlants?: PowerPlant[];
 }
 
 // Prepares the opening market and stack for Set 1 or Set 2 under Recharged: the
@@ -64,6 +75,14 @@ export function prepareNewDeck(
         return map.setupDeck(numPlayers, 'recharged', rng, cards);
     }
 
+    const take = (numbers: number[] = []) => {
+        const taken = numbers.map((n) => cards.find((p) => p.number == n)).filter((p): p is PowerPlant => !!p);
+        cards = cards.filter((p) => !taken.includes(p));
+        return taken;
+    };
+    const stepTwoTop = take(note.stepTwoTop);
+    const topOfStack = take(note.topOfStack);
+    const fixedMarket = take(note.market);
     const step3 = cards.find((p) => p.type == PowerPlantType.Step3)!;
     cards = cards.filter((p) => p != step3);
 
@@ -76,20 +95,23 @@ export function prepareNewDeck(
         rng() + ''
     );
 
-    const market = plugs.splice(0, prep.market[0] + prep.market[1]).sort((a, b) => a.number - b.number);
+    const market = [...fixedMarket, ...plugs.splice(0, prep.market[0] + prep.market[1] - fixedMarket.length)].sort(
+        (a, b) => a.number - b.number
+    );
     const onTop = prep.plugsOnTop == 'one' ? plugs.splice(0, 1) : prep.plugsOnTop == 'all' ? plugs.splice(0) : [];
 
-    const isProtected = (p: PowerPlant) => !!prep.protect?.(p);
+    const isProtected = (p: PowerPlant) => !!prep.protect?.(p) || !!note.protect?.includes(p.number);
     const protectedPlants = [...plugs, ...sockets].filter(isProtected);
     plugs = plugs.filter((p) => !isProtected(p)).slice(prep.plugRemovals[numPlayers - 2]);
     sockets = sockets.filter((p) => !isProtected(p)).slice(prep.socketRemovals[numPlayers - 2]);
 
-    const stack = [...onTop, ...shuffle([...plugs, ...sockets, ...protectedPlants], rng() + '')];
+    const stack = [...topOfStack, ...onTop, ...shuffle([...plugs, ...sockets, ...protectedPlants], rng() + '')];
     stack.splice(stack.length - prep.belowStepThree, 0, step3);
 
     return {
         actualMarket: market.slice(0, prep.market[0]),
         futureMarket: market.slice(prep.market[0]),
         powerPlantsDeck: stack,
+        ...(stepTwoTop.length ? { stepTwoTopPlants: stepTwoTop } : {}),
     };
 }

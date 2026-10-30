@@ -2,7 +2,17 @@
 // the maps' own preparation and real setups, for checking by eye.
 //
 //   npx ts-node --transpile-only scripts/deck-table.ts [--json]
-import { deckBox, deckNote, deckNotes, NewDeck, noGarbageInStepOne, uraniumStopPlant } from '../src/deck-notes';
+import {
+    deckBox,
+    deckNote,
+    DeckNote,
+    deckNotes,
+    NewDeck,
+    noGarbageInStepOne,
+    SHUFFLED_EXCLUDED_MAPS,
+    standardNotes,
+    uraniumStopPlant,
+} from '../src/deck-notes';
 import { setup } from '../src/engine';
 import { hasPlug, MapName, PowerPlant, PowerPlantType } from '../src/gamestate';
 import { mapsRecharged } from '../src/maps';
@@ -10,7 +20,7 @@ import { mapPreparation } from '../src/new-decks';
 import { plantCatalogue } from '../src/powerPlants';
 
 export interface DeckRow {
-    deck: NewDeck;
+    deck: NewDeck | 'shuffled';
     map: string;
     boxed: string;
     market: string;
@@ -138,11 +148,76 @@ function row(deck: NewDeck, mapName: string): DeckRow {
     };
 }
 
+// A shuffled deck: each deck's notes, applying only to that deck's cards.
+function shuffledRow(mapName: string): DeckRow {
+    const excluded = SHUFFLED_EXCLUDED_MAPS.includes(mapName);
+    const notes: [string, DeckNote][] = [
+        ['standard', standardNotes[mapName] ?? {}],
+        ['Set 1', deckNotes.set1[mapName] ?? {}],
+        ['Set 2', deckNotes.set2[mapName] ?? {}],
+    ];
+    const byDeck = (field: keyof DeckNote) =>
+        notes
+            .filter(([, note]) => Array.isArray(note[field]) && (note[field] as number[]).length)
+            .map(([name, note]) => `${name}'s ${list(note[field] as number[])}`)
+            .join('; ') || '—';
+    const prep = mapPreparation(mapName);
+    const inGame = excluded
+        ? []
+        : players.map((n) => {
+              const G = setup(
+                  n,
+                  { map: mapName as MapName, variant: 'recharged', plantDeck: 'shuffled' },
+                  `table-${n}`
+              );
+              return [...G.actualMarket, ...G.futureMarket, ...G.powerPlantsDeck].filter(
+                  (p) => p.type != PowerPlantType.Step3
+              ).length;
+          });
+    const stops = notes.filter(([, note]) => note.uraniumStop).map(([name, note]) => `${name}'s ${note.uraniumStop}`);
+    const other: string[] = [];
+    if (excluded) other.push('not allowed: the map notes rebuild the whole deck');
+    if (deckNotes.set2[mapName]?.noGarbageInStepOne)
+        other.push("no garbage in Step 1 when one of Set 2's garbage/oil hybrids is in the game");
+    if (mapName == 'Middle East') other.push('garbage/nuclear plug plants boxed from the current market in Step 1');
+    if (mapName == 'India') other.push('garbage plants burn one more garbage');
+    if (mapName == 'Australia') other.push('nuclear plants are uranium mines');
+    const market = byDeck('market');
+    return {
+        deck: 'shuffled',
+        map: mapName,
+        boxed: excluded ? '—' : byDeck('box'),
+        market: excluded
+            ? '—'
+            : `${mapName == 'Europe' ? '4 + 5' : `${prep.market[0]} + ${prep.market[1]}`}${
+                  market != '—' ? `; ${market} placed first` : ''
+              }`,
+        plugPool: excluded ? '—' : "each card's own: 01–15, and 16 when it comes from Set 1",
+        top: excluded
+            ? '—'
+            : [byDeck('topOfStack'), 'one plug card', byDeck('belowTopPlug')].filter((t) => t != '—').join(', then '),
+        removals: excluded
+            ? '—'
+            : [2, 3, 4].map((n) => `${n}P ${prep.plugRemovals[n - 2]}+${prep.socketRemovals[n - 2]}`).join(', '),
+        protected: excluded
+            ? '—'
+            : [byDeck('protect'), prep.protect ? 'ecological plants (map rule)' : '—']
+                  .filter((t) => t != '—')
+                  .join('; ') || '—',
+        stepTwoTop: excluded ? '—' : byDeck('stepTwoTop'),
+        stepThree: excluded ? '—' : prep.belowStepThree ? `${prep.belowStepThree} plants below` : 'bottom',
+        uraniumStop: excluded ? '—' : stops.join(', ') || '—',
+        other: other.join('; ') || '—',
+        inGame,
+    };
+}
+
 export function deckTable(): DeckRow[] {
     const rows: DeckRow[] = [];
     for (const deck of Object.keys(deckNotes) as NewDeck[]) {
         for (const map of mapsRecharged.map((m) => m.name)) rows.push(row(deck, map));
     }
+    for (const map of mapsRecharged.map((m) => m.name)) rows.push(shuffledRow(map));
     return rows;
 }
 

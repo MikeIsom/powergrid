@@ -274,6 +274,7 @@ export interface GameState {
     discardSmallestPlant: boolean; // For Benelux map, there are times when we remove the smallest plant.
     nextCardWeak: boolean;
     cardsLeft: number;
+    // The uranium stop plant was bought (39 in the standard deck; see uraniumStopPlant).
     card39Bought: boolean;
     knownPowerPlantDeck: PowerPlant[];
     knownPowerPlantDeckStep3: PowerPlant[];

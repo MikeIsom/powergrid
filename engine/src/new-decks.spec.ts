@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
+import { deckNote } from './deck-notes';
 import { move, setup } from './engine';
 import { GameState, hasPlug, MapName, Phase, PowerPlant, PowerPlantType } from './gamestate';
 import { MoveName } from './move';
@@ -91,9 +92,8 @@ describe('New power plant decks', () => {
     });
 
     it('throws a clear error for a deck and map without map notes', () => {
-        expect(() => setup(3, { map: 'Germany', variant: 'recharged', plantDeck: 'set1' }, 'n')).to.throw(
-            'There are no Set 1 map notes for Germany.'
-        );
+        expect(() => deckNote('set1', 'Atlantis')).to.throw('There are no Set 1 map notes for Atlantis.');
+        expect(() => deckNote('set2', 'Atlantis')).to.throw('There are no Set 2 map notes for Atlantis.');
     });
 
     it('stores the deck only when it is not the standard deck', () => {
@@ -283,5 +283,30 @@ describe('New power plant decks', () => {
         const G = game('set1', 'India', 4);
         const plant = [...inGame(G), ...(G.stepTwoTopPlants ?? [])].find((p) => p.number == 21)!;
         expect([plant.cost, plant.storage]).to.deep.equal([4, 6]);
+    });
+
+    it('stops Germany and Italy uranium after the plant named in the map notes is bought', () => {
+        for (const [deck, stop] of [
+            ['set1', 38],
+            ['set2', 37],
+        ] as const) {
+            for (const map of ['Germany', 'Italy'] as MapName[]) {
+                const bought = (plant: number) => {
+                    let G = game(deck, map, 3);
+                    G.round = 2;
+                    G.plantDiscountActive = false;
+                    G.actualMarket = [...G.actualMarket.slice(0, 3), card(plant, PowerPlantType.Uranium, 1, 6)].map(
+                        (p) => ({ ...p })
+                    ) as PowerPlant[];
+                    const p = G.currentPlayers[0];
+                    G.players[p].money = 200;
+                    G.players[p].availableMoves = availableMoves(G, G.players[p]);
+                    G = move(G, { name: MoveName.ChoosePowerPlant, data: plant }, p);
+                    return G.card39Bought;
+                };
+                expect(bought(stop)).to.be.true;
+                expect(bought(39)).to.be.false;
+            }
+        }
     });
 });

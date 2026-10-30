@@ -3,6 +3,8 @@
 // plants-new-power-plants-set2-map-notes.md (Mike Isom's transcription). Plant
 // numbers are the printed numbers. A deck/map pair without a note cannot be set up.
 
+import { GameOptions } from './gamestate';
+
 export type NewDeck = 'set1' | 'set2';
 
 export interface DeckNote {
@@ -16,6 +18,8 @@ export interface DeckNote {
     topOfStack?: number[];
     // Set aside, then put on top of the stack at the start of Step 2, top first.
     stepTwoTop?: number[];
+    // Uranium resupply stops once a player buys this plant (Germany, Italy).
+    uraniumStop?: number;
 }
 
 // Boxed for every map. Set 1: 52, 54, 57 and 60 (plants-new-power-plants-set1.pdf p.2).
@@ -30,6 +34,8 @@ const noChanges: DeckNote = {};
 export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
     set1: {
         USA: noChanges,
+        Germany: { uraniumStop: 38 },
+        Italy: { uraniumStop: 38 },
         France: { box: [10], market: [8] },
         Brazil: { market: [6], protect: [21, 27, 33, 42] },
         'Spain & Portugal': { stepTwoTop: [15, 16, 26] },
@@ -49,6 +55,8 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
     },
     set2: {
         USA: noChanges,
+        Germany: { uraniumStop: 37 },
+        Italy: { uraniumStop: 37 },
         France: { box: [11], market: [13] },
         Brazil: { market: [5, 14], protect: [16, 19, 26, 39] },
         'Spain & Portugal': { stepTwoTop: [17, 24, 28] },
@@ -67,6 +75,13 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         'Baden-Württemberg': noChanges,
     },
 };
+
+// The plant whose purchase stops uranium resupply on Germany and Italy: 39 in the
+// standard deck, else the plant the deck's map notes name (if any).
+export function uraniumStopPlant(options: GameOptions, mapName: string): number | undefined {
+    const deck = options.plantDeck;
+    return deck == 'set1' || deck == 'set2' ? deckNotes[deck][mapName]?.uraniumStop : 39;
+}
 
 export function deckNote(deck: NewDeck, mapName: string): DeckNote {
     const note = deckNotes[deck][mapName];

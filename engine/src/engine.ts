@@ -17,8 +17,10 @@ import {
     replacePoweringLog,
     restorePowering,
 } from './choice-revisions';
+import { uraniumStopPlant } from './deck-notes';
 import {
     countHeldPowerPlants,
+    faceValue,
     GameOptions,
     GameState,
     hasPlug,
@@ -779,7 +781,9 @@ export function move(
             G.chosenPowerPlant = G.actualMarket.find((p) => p.number === move.data)!;
             G.auctioningPlayer = player.id;
 
-            if (move.data == 39) {
+            // The uranium stop plant (base-recharged.pdf p.7, maps-france-italy.pdf p.2;
+            // with a new deck, its map notes). An auction always ends in a sale.
+            if (faceValue(G.chosenPowerPlant) === uraniumStopPlant(G.options, G.map.name)) {
                 G.card39Bought = true;
             }
 

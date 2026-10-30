@@ -180,4 +180,13 @@ describe('Rule versions', () => {
         expect(inGame(13)).to.equal(35);
         expect(inGame(14)).to.equal(36);
     });
+
+    it('europeOriginalRemovals: uses the Original removal counts on Europe from version 14', () => {
+        const inGame = (version: number) => {
+            const G = setup(2, { map: 'Europe', variant: 'original', version }, 'versions');
+            return G.actualMarket.length + G.futureMarket.length + G.powerPlantsDeck.length - 1;
+        };
+        expect(inGame(13)).to.equal(36);
+        expect(inGame(14)).to.equal(34);
+    });
 });

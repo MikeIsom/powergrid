@@ -29,6 +29,8 @@ export const ruleVersions = {
     wienDiscountFloor: 14,
     // France, Recharged, 2 players: remove 5 socket plants, not 6 (F10).
     france2pSocketRemovals: 14,
+    // Europe, Original: the Original removal counts (C2).
+    europeOriginalRemovals: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

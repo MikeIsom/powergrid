@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
-import { addPowerPlant, getPowerPlant, move, setup } from './engine';
-import { GameState, Phase, Variant } from './gamestate';
+import { addPowerPlant, getPowerPlant, move, setup, updatePlayerCapacity } from './engine';
+import { GameState, Phase, ResourceType, Variant } from './gamestate';
 import { MoveName } from './move';
 
 const variants: Variant[] = ['original', 'recharged'];
@@ -194,5 +194,25 @@ describe('Rule fixes', () => {
             const inGame = G.actualMarket.length + G.futureMarket.length + G.powerPlantsDeck.length - 1;
             expect(inGame, `${n} players`).to.equal(41 - removed[n]);
         }
+    });
+
+    it('F11: never takes the Wien garbage discount below $1', () => {
+        let G = setup(3, { map: 'Central Europe', variant: 'recharged' }, 'f11');
+        G.phase = Phase.Resources;
+        const player = G.players[0];
+        G.currentPlayers = [player.id];
+        player.cities = [{ name: 'Wien', position: 0 }];
+        player.powerPlants = plants(6);
+        updatePlayerCapacity(player);
+        const buy = () => {
+            const money = player.money;
+            player.availableMoves = availableMoves(G, player);
+            G = move(G, { name: MoveName.BuyResource, data: { resource: ResourceType.Garbage } }, player.id);
+            return money - player.money;
+        };
+        G.garbageMarket = 24; // cheapest garbage at $1
+        expect(buy(), 'from the $1 space').to.equal(1);
+        G.garbageMarket = 18; // cheapest garbage at $3
+        expect(buy(), 'from the $3 space').to.equal(2);
     });
 });

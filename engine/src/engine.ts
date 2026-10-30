@@ -1693,11 +1693,12 @@ export function move(
                         const garbagePrices = G.garbagePrices ?? prices[ResourceType.Garbage];
                         price = garbagePrices[garbagePrices.length - G.garbageMarket];
 
-                        // $1 cheaper for players in Wien in Central Europe
+                        // $1 cheaper for players in Wien in Central Europe, but never below $1
+                        // (maps-benelux-central-europe.pdf p.2)
                         if (G.map.name == 'Central Europe') {
                             const wienCity = player.cities.filter((c) => c.name == 'Wien');
                             if (wienCity?.length > 0) {
-                                price--;
+                                price = Math.max(1, price - 1);
                             }
                         }
 

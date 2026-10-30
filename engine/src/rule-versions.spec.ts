@@ -1,7 +1,9 @@
 import { expect } from 'chai';
 import 'mocha';
+import { availableMoves } from './available-moves';
 import { addPowerPlant, getPowerPlant, setup } from './engine';
 import { GameOptions, Phase } from './gamestate';
+import { MoveName } from './move';
 import { rulesApply } from './rule-versions';
 
 describe('Rule versions', () => {
@@ -32,5 +34,21 @@ describe('Rule versions', () => {
     it('franceStartingGarbage: starts France, Recharged, with 9 garbage from version 14', () => {
         expect(setup(3, { map: 'France', variant: 'recharged', version: 13 }, 'versions').garbageMarket).to.equal(6);
         expect(setup(3, { map: 'France', variant: 'recharged', version: 14 }, 'versions').garbageMarket).to.equal(9);
+    });
+
+    it('ukIrelandOpenSlotJump: jumps into an occupied UK & Ireland city from version 14', () => {
+        const jumpPrice = (version: number) => {
+            const G = setup(5, { map: 'UK & Ireland', variant: 'recharged', version }, 'versions');
+            G.phase = Phase.Building;
+            G.step = 2;
+            const player = G.players[0];
+            player.money = 200;
+            const [occupied] = G.map.cities.filter((c) => c.island === 'ie');
+            player.cities = [{ name: G.map.cities.find((c) => c.island === 'gb')!.name, position: 0 }];
+            G.players[1].cities = [{ name: occupied.name, position: 0 }];
+            return availableMoves(G, player)[MoveName.Build]?.find((b) => b.name == occupied.name)?.price;
+        };
+        expect(jumpPrice(13)).to.be.undefined;
+        expect(jumpPrice(14)).to.equal(35);
     });
 });

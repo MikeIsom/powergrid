@@ -9,6 +9,8 @@ export const ruleVersions = {
     stepAnnouncementLog: 13,
     // France, Recharged: starts with 9 garbage, not 6 (F1).
     franceStartingGarbage: 14,
+    // UK & Ireland: the island jump may use any city with an open slot (F2).
+    ukIrelandOpenSlotJump: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

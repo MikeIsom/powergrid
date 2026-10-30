@@ -13,6 +13,7 @@ import {
 import { GameMap } from './maps';
 import { MoveName } from './move';
 import prices from './prices';
+import { rulesApply } from './rule-versions';
 import { minBy } from './utils';
 
 export interface AvailableMoves {
@@ -612,7 +613,13 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                                 .filter((i): i is string => !!i)
                         );
                         if (!playerIslands.has(cityData.island)) {
-                            city.price = G.map.crossIslandSurcharge;
+                            if (rulesApply(G.options, 'ukIrelandOpenSlotJump')) {
+                                city.price = G.map.crossIslandSurcharge;
+                            } else {
+                                // Before: only empty cities, at 10 + the surcharge.
+                                city.price = othersCount > 0 ? 9999 : 10 + G.map.crossIslandSurcharge;
+                                return;
+                            }
                         }
                     }
 

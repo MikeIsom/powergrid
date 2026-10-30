@@ -2306,6 +2306,7 @@ export function addPowerPlant(G: GameState): void {
                 } else {
                     // The deck ran out: the too-small plant is still removed, and
                     // nothing replaces it (base-original-2013.pdf p.5).
+                    arrangeMarket(G, [...G.actualMarket, ...G.futureMarket]);
                     return;
                 }
             }
@@ -2376,37 +2377,41 @@ export function addPowerPlant(G: GameState): void {
             market.sort((a, b) => a.number - b.number);
             G.actualMarket = market;
         } else {
-            const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
-            market.sort((a, b) => a.number - b.number);
-            if (G.futureMarket.length == 0) {
-                if (G.map.name == 'Russia') {
-                    // Only four plants in market.
-                    G.actualMarket = market.slice(0, 4);
-                    G.futureMarket = [];
-                } else {
-                    G.actualMarket = market.slice(0, 6);
-                    G.futureMarket = [];
-                }
-            } else {
-                if (G.map.name == 'Russia') {
-                    // Only 3 plants in actual market and 3 in future market.
-                    G.actualMarket = market.slice(0, 3);
-                    G.futureMarket = market.slice(3);
-                } else if (G.map.name == 'Benelux' && isEcological(market[4])) {
-                    // Add extra ecological plant to actual market (maps-benelux-central-europe.pdf
-                    // p.2); fusion counts as ecological (base-recharged.pdf p.3).
-                    G.actualMarket = market.slice(0, 5);
-                    G.futureMarket = market.slice(5);
-                } else {
-                    G.actualMarket = market.slice(0, 4);
-                    G.futureMarket = market.slice(4);
-                }
-            }
-
-            if (G.map.name == 'Middle East' && G.step == 1) {
-                removePlantsForMiddleEastStep1(G);
-            }
+            arrangeMarket(G, [...G.actualMarket, ...G.futureMarket, powerPlant]);
         }
+    }
+}
+
+// Sorts the market plants and splits them into the current and future markets.
+function arrangeMarket(G: GameState, market: PowerPlant[]) {
+    market.sort((a, b) => a.number - b.number);
+    if (G.futureMarket.length == 0) {
+        if (G.map.name == 'Russia') {
+            // Only four plants in market.
+            G.actualMarket = market.slice(0, 4);
+            G.futureMarket = [];
+        } else {
+            G.actualMarket = market.slice(0, 6);
+            G.futureMarket = [];
+        }
+    } else {
+        if (G.map.name == 'Russia') {
+            // Only 3 plants in actual market and 3 in future market.
+            G.actualMarket = market.slice(0, 3);
+            G.futureMarket = market.slice(3);
+        } else if (G.map.name == 'Benelux' && isEcological(market[4])) {
+            // Add extra ecological plant to actual market (maps-benelux-central-europe.pdf
+            // p.2); fusion counts as ecological (base-recharged.pdf p.3).
+            G.actualMarket = market.slice(0, 5);
+            G.futureMarket = market.slice(5);
+        } else {
+            G.actualMarket = market.slice(0, 4);
+            G.futureMarket = market.slice(4);
+        }
+    }
+
+    if (G.map.name == 'Middle East' && G.step == 1) {
+        removePlantsForMiddleEastStep1(G);
     }
 }
 

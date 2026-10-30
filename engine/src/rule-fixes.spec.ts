@@ -178,6 +178,10 @@ describe('Rule fixes', () => {
         addPowerPlant(G);
         expect(G.powerPlantsDeck).to.be.empty;
         expect([...G.actualMarket, ...G.futureMarket].map((p) => p.number)).to.deep.equal([11, 12, 13, 14, 15, 16, 17]);
+        expect(
+            G.actualMarket.map((p) => p.number),
+            'the four lowest are current'
+        ).to.deep.equal([11, 12, 13, 14]);
     });
 
     it('F9: starts Brazil with 9 biogas on spaces 6–8 under Recharged, 6 under Original', () => {

@@ -2583,10 +2583,20 @@ export function applyManhattanDepletionOnEmptyDeck(G: GameState): void {
         // (maps-bremen-manhattan.pdf p.1). Until then the future market stays as it
         // is; the Bureaucracy lifecycle (stage 2) collapses it.
         G.manhattanDepletion = 2;
-        G.log.push({
-            type: 'event',
-            event: 'The deck is empty for the second time — the entire market is buyable from the next round.',
-        });
+        if (rulesApply(G.options, 'manhattanBuyableNextRound')) {
+            G.log.push({
+                type: 'event',
+                event: 'The deck is empty for the second time — the entire market is buyable from the next round.',
+            });
+        } else {
+            const market = [...G.actualMarket, ...G.futureMarket].sort((a, b) => a.number - b.number);
+            G.actualMarket = market;
+            G.futureMarket = [];
+            G.log.push({
+                type: 'event',
+                event: 'The deck is empty for the second time — the entire market is now buyable.',
+            });
+        }
     }
 }
 

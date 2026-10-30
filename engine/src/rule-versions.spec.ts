@@ -203,4 +203,20 @@ describe('Rule versions', () => {
         expect(market(13)).to.deep.equal([36, 38, 39, 40]);
         expect(market(14)).to.deep.equal([36, 38, 39, 40, 50]);
     });
+
+    it('manhattanBuyableNextRound: keeps the Manhattan future market until the next round from version 14', () => {
+        const future = (version: number) => {
+            const G = setup(4, { map: 'Manhattan', variant: 'recharged', version }, 'versions');
+            G.plantDiscountActive = false;
+            G.manhattanDepletion = 1;
+            G.manhattanRecyclePile = [];
+            G.actualMarket = plants(20, 22, 30, 40);
+            G.futureMarket = plants(42, 44, 46);
+            G.powerPlantsDeck = [];
+            addPowerPlant(G);
+            return G.futureMarket.length;
+        };
+        expect(future(13)).to.equal(0);
+        expect(future(14)).to.equal(3);
+    });
 });

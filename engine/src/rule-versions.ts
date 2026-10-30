@@ -33,6 +33,8 @@ export const ruleVersions = {
     europeOriginalRemovals: 14,
     // Benelux: fusion plant 50 counts as ecological (C5).
     beneluxFusionEcological: 14,
+    // Manhattan: the whole market is buyable from the round after the second depletion (F14).
+    manhattanBuyableNextRound: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

@@ -2312,11 +2312,13 @@ export function addPowerPlant(G: GameState): void {
                             G.knownPowerPlantDeck.push(powerPlant);
                         }
                     }
-                } else {
+                } else if (rulesApply(G.options, 'noTooSmallLastCard')) {
                     // The deck ran out: the too-small plant is still removed, and
                     // nothing replaces it (base-original-2013.pdf p.5).
                     arrangeMarket(G, [...G.actualMarket, ...G.futureMarket]);
                     return;
+                } else {
+                    break;
                 }
             }
         }

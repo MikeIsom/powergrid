@@ -17,6 +17,8 @@ export const ruleVersions = {
     badenWurttembergKeepsDrawnPlants: 14,
     // Russia, Original: drawn plants at or below a city count are kept (C1).
     russiaKeepsDrawnPlants: 14,
+    // Original: a too-small plant is not added when the deck runs out (F8).
+    noTooSmallLastCard: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

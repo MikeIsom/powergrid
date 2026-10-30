@@ -111,6 +111,61 @@ const alternatePowerPlants: PowerPlant[] = [
 // Plug on the back: 03–15, as in the standard deck.
 alternatePowerPlants.forEach((pp) => (pp.plug = pp.number <= 15));
 
+// The New Power Plants, Set 1. Hybrids burn coal and oil; the fusion plants (44, 60+)
+// are modelled like the standard 50. 52, 54, 57 and 60 are boxed in normal play
+// (plants-new-power-plants-set1.pdf p.2).
+const set1PowerPlants: PowerPlant[] = [
+    { number: 1, type: PowerPlantType.Coal, cost: 3, citiesPowered: 1 },
+    { number: 2, type: PowerPlantType.Oil, cost: 2, citiesPowered: 1 },
+    { number: 3, type: PowerPlantType.Coal, cost: 1, citiesPowered: 1 },
+    { number: 4, type: PowerPlantType.Hybrid, cost: 1, citiesPowered: 1 },
+    { number: 5, type: PowerPlantType.Hybrid, cost: 3, citiesPowered: 2 },
+    { number: 6, type: PowerPlantType.Garbage, cost: 1, citiesPowered: 2 },
+    { number: 7, type: PowerPlantType.Oil, cost: 2, citiesPowered: 2 },
+    { number: 8, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 2 },
+    { number: 9, type: PowerPlantType.Coal, cost: 3, citiesPowered: 3 },
+    { number: 10, type: PowerPlantType.Wind, cost: 0, citiesPowered: 1 },
+    { number: 11, type: PowerPlantType.Wind, cost: 0, citiesPowered: 1 },
+    { number: 12, type: PowerPlantType.Oil, cost: 1, citiesPowered: 2 },
+    { number: 13, type: PowerPlantType.Hybrid, cost: 1, citiesPowered: 2 },
+    { number: 14, type: PowerPlantType.Coal, cost: 3, citiesPowered: 4 },
+    { number: 15, type: PowerPlantType.Wind, cost: 0, citiesPowered: 2 },
+    { number: 16, type: PowerPlantType.Wind, cost: 0, citiesPowered: 2 },
+    { number: 19, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 3 },
+    { number: 20, type: PowerPlantType.Oil, cost: 1, citiesPowered: 3 },
+    { number: 21, type: PowerPlantType.Garbage, cost: 3, citiesPowered: 5 },
+    { number: 22, type: PowerPlantType.Oil, cost: 2, citiesPowered: 4 },
+    { number: 23, type: PowerPlantType.Coal, cost: 2, citiesPowered: 4 },
+    { number: 24, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 4 },
+    { number: 25, type: PowerPlantType.Oil, cost: 3, citiesPowered: 5 },
+    { number: 26, type: PowerPlantType.Wind, cost: 0, citiesPowered: 3 },
+    { number: 27, type: PowerPlantType.Garbage, cost: 1, citiesPowered: 4 },
+    { number: 28, type: PowerPlantType.Coal, cost: 3, citiesPowered: 5 },
+    { number: 29, type: PowerPlantType.Hybrid, cost: 3, citiesPowered: 5 },
+    { number: 30, type: PowerPlantType.Coal, cost: 1, citiesPowered: 4 },
+    { number: 31, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 5 },
+    { number: 32, type: PowerPlantType.Wind, cost: 0, citiesPowered: 4 },
+    { number: 33, type: PowerPlantType.Garbage, cost: 2, citiesPowered: 5 },
+    { number: 34, type: PowerPlantType.Coal, cost: 3, citiesPowered: 6 },
+    { number: 35, type: PowerPlantType.Coal, cost: 1, citiesPowered: 5 },
+    { number: 36, type: PowerPlantType.Hybrid, cost: 2, citiesPowered: 6 },
+    { number: 37, type: PowerPlantType.Oil, cost: 3, citiesPowered: 7 },
+    { number: 38, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 6 },
+    { number: 39, type: PowerPlantType.Wind, cost: 0, citiesPowered: 5 },
+    { number: 40, type: PowerPlantType.Oil, cost: 1, citiesPowered: 6 },
+    { number: 42, type: PowerPlantType.Garbage, cost: 2, citiesPowered: 7 },
+    { number: 44, type: PowerPlantType.Nuclear, cost: 0, citiesPowered: 6 },
+    { number: 46, type: PowerPlantType.Coal, cost: 2, citiesPowered: 7, plus: true },
+    { number: 50, type: PowerPlantType.Uranium, cost: 2, citiesPowered: 8, plus: true },
+    { number: 52, type: PowerPlantType.Garbage, cost: 3, citiesPowered: 8, plus: true },
+    { number: 54, type: PowerPlantType.Oil, cost: 2, citiesPowered: 8, plus: true },
+    { number: 57, type: PowerPlantType.Oil, cost: 3, citiesPowered: 9, plus: true },
+    { number: 60, type: PowerPlantType.Nuclear, cost: 0, citiesPowered: 8, plus: true },
+    { number: 99, type: PowerPlantType.Step3, cost: 0, citiesPowered: 6 },
+];
+// Plug on the back: 01–16.
+set1PowerPlants.forEach((pp) => (pp.plug = pp.number <= 16));
+
 // The maps the alternate deck can be played on. The alternatePowerPlants option is
 // ignored on every other map.
 const ALTERNATE_DECK_MAPS: string[] = ['Europe', 'North America'];
@@ -128,4 +183,12 @@ function plantCatalogue(mapName: string, alternate?: boolean): PowerPlant[] {
     return usesAlternateDeck(mapName, alternate) ? alternatePowerPlants : powerPlants;
 }
 
-export { powerPlants, indiaPowerPlants, alternatePowerPlants, ALTERNATE_DECK_MAPS, usesAlternateDeck, plantCatalogue };
+export {
+    powerPlants,
+    indiaPowerPlants,
+    alternatePowerPlants,
+    set1PowerPlants,
+    ALTERNATE_DECK_MAPS,
+    usesAlternateDeck,
+    plantCatalogue,
+};

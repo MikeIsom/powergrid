@@ -94,6 +94,8 @@ export interface PowerPlant {
     // A plug on the card's back: the weak plants used for the opening market and
     // the "next card is weak" hint (standard and Set 2: 03–15, Set 1: 01–16).
     plug?: boolean;
+    // Printed with a "+" after the number (Set 1: 46+, 50+, 52+, 54+, 57+, 60+). Display only.
+    plus?: boolean;
 }
 
 export interface CityPosition {

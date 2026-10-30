@@ -4,12 +4,12 @@ import { map as america, mapRecharged as americaRecharged } from './maps/america
 import { map as australia } from './maps/australia';
 import { map as badenwurttemberg } from './maps/badenwurttemberg';
 import { map as benelux } from './maps/benelux';
-import { map as brazil } from './maps/brazil';
+import { map as brazil, mapRecharged as brazilRecharged } from './maps/brazil';
 import { map as bremen } from './maps/bremen';
 import { map as centraleurope } from './maps/centraleurope';
 import { map as china } from './maps/china';
 import { map as europe } from './maps/europe';
-import { map as france } from './maps/france';
+import { map as france, mapRecharged as franceRecharged } from './maps/france';
 import { map as germany, mapRecharged as germanyRecharged } from './maps/germany';
 import { map as indian } from './maps/indian';
 import { map as italy } from './maps/italy';
@@ -189,9 +189,9 @@ export const maps: GameMap[] = [
 export const mapsRecharged: GameMap[] = [
     americaRecharged,
     germanyRecharged,
-    brazil,
+    brazilRecharged,
     spainportugal,
-    france,
+    franceRecharged,
     indian,
     italy,
     quebec,

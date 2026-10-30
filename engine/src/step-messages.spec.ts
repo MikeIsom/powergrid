@@ -84,13 +84,15 @@ describe('step announcements', () => {
         takeMessages(result, [2, 3]);
     });
 
-    it('announces the Middle East first deck depletion as Step 2', () => {
+    it('announces the Middle East first deck depletion as Step 2 at the next phase', async () => {
         const G = lastPlayerIn(Phase.Building, 'Middle East');
         G.actualMarket.shift();
         G.powerPlantsDeck.unshift(getPowerPlant(99));
         addPowerPlant(G);
-        expect(G.step).to.equal(2);
-        takeMessages(G, [2]);
+        expect(G.step).to.equal(1);
+        const result = await wrapper.move(G, pass, 0);
+        expect(result.step).to.equal(2);
+        takeMessages(result, [2]);
     });
 
     it('announces China Step 3 as soon as its card is drawn', () => {

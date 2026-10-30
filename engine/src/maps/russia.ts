@@ -288,7 +288,12 @@ export const map: GameMap = {
 
         return { actualMarket, futureMarket, powerPlantsDeck };
     },
-    mapSpecificRules: 'The power plant market is restricted, and the rules for removing old ' + 'plants are changed.\n',
+    mapSpecificRules:
+        'The power plant market is restricted, and the rules for removing old plants are changed: ' +
+        'from round 2, the first time a player passes instead of offering a plant in an auction, ' +
+        'the smallest plant in the current market is removed and replaced. Under Original rules, ' +
+        'plants at or below the city count of a player are never removed, and nothing is removed ' +
+        'when everyone passes.\n',
     deckBuild: {
         recharged:
             'plants 6 and 14 are removed from the game. The ' +
@@ -297,9 +302,10 @@ export const map: GameMap = {
             'deck. Removal by player count (higher plants only): 2 players remove ' +
             '6, 3 players remove 8, 4 players remove 4.',
         original:
-            'plants 6 and 14 are removed from the game; the ' +
-            'market is 3, 4, 5 / 7, 8, 9. Plant 13 goes on top of the deck, then ' +
-            'five shuffled cards (plants 10, 11 and the top three of the deck), ' +
-            'then the rest, with the Step 3 card on the bottom.',
+            'plants 6 and 14 are removed from the game; the market is 3, 4, 5 / 7, 8, 9. ' +
+            'Plants 10, 11 and 13 are set aside, the rest is shuffled and the player-count ' +
+            'removal applied (8 plants with 2 or 3 players, 4 with 4). Then plant 13 goes on ' +
+            'top of the deck, followed by five shuffled cards (plants 10, 11 and the top three ' +
+            'of the deck), then the rest, with the Step 3 card on the bottom.',
     },
 };

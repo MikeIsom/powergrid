@@ -115,7 +115,8 @@ export function createAnalysisScenario(
     candidates = candidates.filter((p) => !top.some((t) => t.number === p.number));
     const mandatory = (p: PowerPlant) =>
         (name === 'Brazil' && p.type === PowerPlantType.Garbage && p.number > 14) ||
-        (name === 'Quebec' && [PowerPlantType.Wind, PowerPlantType.Nuclear].includes(p.type)) ||
+        // Québec never removes its green (wind) plants; fusion 50 can be removed.
+        (name === 'Quebec' && p.type === PowerPlantType.Wind) ||
         (name === 'Russia' && original && [10, 11].includes(p.number));
     // A plug-back top card is public information in the recharged edition.
     if (

@@ -314,8 +314,13 @@ export const map: GameMap = {
             'plants. Garbage plants above 14 are set aside during the player-count ' +
             'removal and shuffled back in, so no garbage plant ever leaves the game.',
         original:
-            'both 13 and 14 are set aside; after the ' +
-            'player-count removal (garbage plants excluded and shuffled back in), ' +
-            '13 goes on top of the deck with 14 directly below it.',
+            'the market is 3–6 / 7–10 as usual, so garbage plant 6 starts in it. Plants 13 and 14 ' +
+            'are set aside, and the garbage plants above 14 are kept out of the player-count removal ' +
+            '(8 plants with 2 or 3 players, 4 with 4) and shuffled back in. Then 13 goes on top of ' +
+            'the deck with 14 directly below it.',
     },
 };
+
+// Recharged: biogas starts on spaces 6–8, i.e. 9 tokens (maps-brazil-spain-portugal.pdf p.2, a change
+// to the Recharged rules). Original keeps 6 (owner's ruling).
+export const mapRecharged: GameMap = { ...map, startingResources: [24, 18, 9, 2] };

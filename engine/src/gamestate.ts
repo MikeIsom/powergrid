@@ -250,6 +250,8 @@ export interface GameState {
     minimunBid: number;
     plantDiscountActive: boolean;
     discountBonusPlayer?: number; // Manhattan: id of the player who bought the discounted plant and may purchase one more this phase.
+    // Middle East: the first Step 3 card was drawn; Step 2 begins at the start of the next phase.
+    middleEastStep2Pending?: boolean;
     pendingMarketRefill?: boolean; // A purchase is owed its replacement plant. Set in endAuction, consumed by whichever path finishes the purchase (#67).
     discardSmallestPlant: boolean; // For Benelux map, there are times when we remove the smallest plant.
     nextCardWeak: boolean;
@@ -288,6 +290,13 @@ export interface GameState {
 // deck setup), so the type check alone identifies them.
 export function isUraniumMine(G: GameState, plant: PowerPlant): boolean {
     return G.map.name === 'Australia' && plant.type === PowerPlantType.Uranium;
+}
+
+// Ecological plants need no fuel: the green wind plants and the blue fusion plant
+// (PowerPlantType.Nuclear). base-recharged.pdf p.3: "Ecological power plants have a
+// green or blue color." Québec, an Original-edition map, counts only the green ones.
+export function isEcological(plant: PowerPlant): boolean {
+    return plant.type === PowerPlantType.Wind || plant.type === PowerPlantType.Nuclear;
 }
 
 // Total time a player has spent on the clock, in milliseconds, including the clock

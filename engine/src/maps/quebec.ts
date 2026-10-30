@@ -212,17 +212,15 @@ export const map: GameMap = {
         let futureMarket: PowerPlant[];
 
         if (variant == 'original') {
-            // No ecological plants will be discarded.
+            // No ecological plants will be discarded. On Québec these are the green (wind)
+            // plants only; fusion plant 50 is an ordinary plant here (base-original-2013.pdf p.4
+            // keeps "Ecological and Fusion Power Plants" apart; owner's ruling).
             // 13, 18, 22 will be set aside and placed on top of the deck.
             const setAsidePlants = powerPlantsDeck.filter((pp) => [13, 18, 22].includes(pp.number));
             const otherEcoPlants = powerPlantsDeck.filter(
-                (pp) =>
-                    (pp.type == PowerPlantType.Wind || pp.type == PowerPlantType.Nuclear) &&
-                    ![13, 18, 22].includes(pp.number)
+                (pp) => pp.type == PowerPlantType.Wind && ![13, 18, 22].includes(pp.number)
             );
-            const nonEcoPlantsDeck = powerPlantsDeck.filter(
-                (pp) => pp.type != PowerPlantType.Wind && pp.type != PowerPlantType.Nuclear
-            );
+            const nonEcoPlantsDeck = powerPlantsDeck.filter((pp) => pp.type != PowerPlantType.Wind);
 
             // Remove first eight plants for actual and future market.
             powerPlantsDeck = nonEcoPlantsDeck.slice(8);
@@ -260,17 +258,14 @@ export const map: GameMap = {
             const powerPlantsDeckLow = powerPlantsDeck.filter((pp) => pp.number >= 3 && pp.number <= 10);
             const plant13 = powerPlantsDeck.filter((pp) => pp.number == 13);
             const otherInitialEcoPlants = powerPlantsDeck.filter((pp) => pp.number == 18 || pp.number == 22);
+            // Ecological plants are the green (wind) plants only, as above.
             const otherEcoPlants = powerPlantsDeck.filter(
-                (pp) =>
-                    ![13, 18, 22].includes(pp.number) &&
-                    (pp.type == PowerPlantType.Wind || pp.type == PowerPlantType.Nuclear)
+                (pp) => ![13, 18, 22].includes(pp.number) && pp.type == PowerPlantType.Wind
             );
             let otherPlants1 = powerPlantsDeck.filter(
                 (pp) => pp.type != PowerPlantType.Wind && pp.number >= 11 && pp.number <= 15
             );
-            let otherPlants2 = powerPlantsDeck.filter(
-                (pp) => pp.type != PowerPlantType.Wind && pp.type != PowerPlantType.Nuclear && pp.number >= 16
-            );
+            let otherPlants2 = powerPlantsDeck.filter((pp) => pp.type != PowerPlantType.Wind && pp.number >= 16);
             if (numPlayers == 2) {
                 otherPlants1 = shuffle(otherPlants1, rng() + '').slice(1);
                 otherPlants2 = shuffle(otherPlants2, rng() + '').slice(5);
@@ -299,13 +294,13 @@ export const map: GameMap = {
 
         return { actualMarket, futureMarket, powerPlantsDeck };
     },
-    mapSpecificRules: 'Ecological power plants will never be put on the bottom of the deck.\n',
+    mapSpecificRules: 'Ecological (green wind) power plants will never be put on the bottom of the deck.\n',
     deckBuild: {
         recharged:
             'the starting market is drawn from the low ' +
             'plants (including 13); one more low plant goes on top of the deck, ' +
-            'with 18 and 22 placed directly beneath it. Ecological plants (wind ' +
-            'and fusion) are never removed during setup.',
+            'with 18 and 22 placed directly beneath it. Ecological (green wind) ' +
+            'plants are never removed during setup.',
         original:
             'power plants 13, 18, 22 are set aside and ' +
             'placed on top of the deck (13 topmost); ecological plants are ' +

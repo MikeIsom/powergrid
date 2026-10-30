@@ -21,6 +21,7 @@ import {
     countHeldPowerPlants,
     GameOptions,
     GameState,
+    isEcological,
     isUraniumMine,
     MapName,
     Phase,
@@ -31,6 +32,7 @@ import {
     ResourceType,
     resupplyUraniumMine,
     sellUraniumMine,
+    Variant,
 } from './gamestate';
 import { GameMap, maps, mapsRecharged } from './maps';
 import { Move, MoveName, Moves } from './move';
@@ -165,22 +167,14 @@ export function setup(
         actualMarket = powerPlantsDeck.splice(0, 4);
         futureMarket = powerPlantsDeck.splice(0, 4);
     } else {
-        if (chosenMap.setupDeck) {
-            ({ actualMarket, futureMarket, powerPlantsDeck } = chosenMap.setupDeck(
-                numPlayers,
-                variant,
-                rng,
-                alternateDeck ? deck : undefined
-            ));
-        } else {
-            ({ actualMarket, futureMarket, powerPlantsDeck } = defaultSetupDeck(
-                numPlayers,
-                variant,
-                rng,
-                useNewRechargedSetup,
-                alternateDeck ? deck : undefined
-            ));
-        }
+        ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+            chosenMap,
+            numPlayers,
+            variant,
+            rng,
+            useNewRechargedSetup,
+            alternateDeck ? deck : undefined
+        ));
     }
 
     const players: Player[] = range(numPlayers).map((id) => ({
@@ -349,7 +343,17 @@ export function setup(
             }
 
             finalMap = filterMapToRegions(chosenMap, playRegions);
-            applyRegionalPowerPlants(chosenMap, playRegions, actualMarket, futureMarket, powerPlantsDeck);
+            if (chosenMap.regionalPowerPlants && !forceDeck) {
+                // A fresh rng on the same seed replays the preparation's own draws.
+                ({ actualMarket, futureMarket, powerPlantsDeck } = prepareDeck(
+                    chosenMap,
+                    numPlayers,
+                    variant,
+                    seedrandom(seed),
+                    useNewRechargedSetup,
+                    withRegionalPlants(deck, chosenMap, playRegions)
+                ));
+            }
         }
     }
 
@@ -562,30 +566,33 @@ function filterMapToRegions(map: GameMap, playRegions: Set<string>): GameMap {
 // Applies the map's regionalPowerPlants overrides for the chosen regions, swapping
 // the replacement plants into whichever of the three decks currently hold the
 // matching plant numbers. Mutates the passed arrays in place.
-function applyRegionalPowerPlants(
+// A map's opening market and stack: its own preparation, or the standard one.
+function prepareDeck(
     map: GameMap,
-    playRegions: Set<string>,
-    actualMarket: PowerPlant[],
-    futureMarket: PowerPlant[],
-    powerPlantsDeck: PowerPlant[]
+    numPlayers: number,
+    variant: Variant,
+    rng: seedrandom.prng,
+    useNewRechargedSetup: boolean,
+    catalogue?: PowerPlant[]
 ) {
-    if (!map.regionalPowerPlants) {
-        return;
-    }
-    for (const region of playRegions) {
-        const replacements = map.regionalPowerPlants[region];
-        if (replacements) {
-            for (const newPlant of replacements) {
-                const swapIn = (arr: PowerPlant[]) => {
-                    const idx = arr.findIndex((p) => p.number === newPlant.number);
-                    if (idx !== -1) arr[idx] = { ...newPlant };
-                };
-                swapIn(actualMarket);
-                swapIn(futureMarket);
-                swapIn(powerPlantsDeck);
-            }
-        }
-    }
+    return map.setupDeck
+        ? map.setupDeck(numPlayers, variant, rng, catalogue)
+        : defaultSetupDeck(numPlayers, variant, rng, useNewRechargedSetup, catalogue);
+}
+
+// Northern Europe: each region in play adds its two plants and boxes the plants with
+// the same numbers, before the market and stack are prepared
+// (maps-northern-europe-uk-ireland.pdf p.2).
+function withRegionalPlants(catalogue: PowerPlant[], map: GameMap, regions: Set<string>): PowerPlant[] {
+    const added = [...regions].reduce(
+        (plants, region) => plants.concat(map.regionalPowerPlants?.[region] ?? []),
+        [] as PowerPlant[]
+    );
+    const numbers = new Set(added.map((p) => p.number));
+    return catalogue
+        .filter((p) => !numbers.has(p.number))
+        .concat(cloneDeep(added))
+        .sort((a, b) => a.number - b.number);
 }
 
 // Completes the chooseRegions draft: filters the map to the picked regions, applies
@@ -596,7 +603,25 @@ function finalizeRegions(G: GameState) {
     const fullMap = G.map;
 
     G.map = filterMapToRegions(fullMap, playRegions);
-    applyRegionalPowerPlants(fullMap, playRegions, G.actualMarket, G.futureMarket, G.powerPlantsDeck);
+    const variant = G.options.variant ?? 'original';
+    const mapData = (variant == 'original' ? maps : mapsRecharged).find((m) => m.name == fullMap.name)!;
+    if (mapData.regionalPowerPlants) {
+        // The deck is prepared again now that the regions are known, replaying the
+        // setup's draws (setup's first use of its rng was the deck preparation).
+        const catalogue = plantCatalogue(mapData.name, G.options.alternatePowerPlants);
+        ({
+            actualMarket: G.actualMarket,
+            futureMarket: G.futureMarket,
+            powerPlantsDeck: G.powerPlantsDeck,
+        } = prepareDeck(
+            mapData,
+            G.players.length,
+            variant,
+            seedrandom(G.seed),
+            G.options.useNewRechargedSetup ?? true,
+            withRegionalPlants(catalogue, mapData, playRegions)
+        ));
+    }
     // knownPowerPlantDeck mirrors actualMarket+futureMarket and must reflect any swap.
     G.knownPowerPlantDeck = G.actualMarket.concat(G.futureMarket);
 
@@ -1055,29 +1080,7 @@ export function move(
                                 G.map.name != 'Middle East' &&
                                 G.map.name != 'Manhattan'
                             ) {
-                                const powerPlant = G.actualMarket.shift()!;
-                                startStep(G, 2, `Starting Step 2, Power Plant ${powerPlant?.number} discarded.`);
-
-                                // Spain & Portugal: put plants 18, 22 and 27 on top
-                                if (G.map.name == 'Spain & Portugal') {
-                                    if (!G.powerPlantsDeck.find((p) => p.number == 18)) {
-                                        G.powerPlantsDeck.unshift(getPowerPlant(27));
-                                        G.powerPlantsDeck.unshift(getPowerPlant(22));
-                                        G.powerPlantsDeck.unshift(getPowerPlant(18));
-                                    }
-                                }
-
-                                if (G.map.name == 'Europe') {
-                                    // Europe: do NOT draw a replacement from the deck.
-                                    // The future market shrinks from 5 to 4; reorganize
-                                    // the remaining 8 plants so actual stays at 4.
-                                    const market = [...G.actualMarket, ...G.futureMarket];
-                                    market.sort((a, b) => a.number - b.number);
-                                    G.actualMarket = market.slice(0, 4);
-                                    G.futureMarket = market.slice(4);
-                                } else {
-                                    addPowerPlant(G);
-                                }
+                                enterStepTwo(G);
                             }
                         }
 
@@ -1307,12 +1310,14 @@ export function move(
                         G.garbageMarket += garbageResupplyValue;
                         G.garbageSupply -= garbageResupplyValue;
 
+                        // Nuclear phase-out: no uranium resupply once plant 39 has been bought.
+                        // Germany: base-recharged.pdf p.7 (Recharged only). Italy:
+                        // maps-france-italy.pdf p.2, under both variants (ruling R5).
+                        const uraniumPhasedOut =
+                            G.card39Bought &&
+                            (G.map.name == 'Italy' || (G.map.name == 'Germany' && G.options.variant == 'recharged'));
                         let uraniumResupplyValue = 0;
-                        if (
-                            G.options.variant != 'recharged' ||
-                            (G.options.map != 'Germany' && G.options.map != 'Italy') ||
-                            !G.card39Bought
-                        ) {
+                        if (!uraniumPhasedOut) {
                             uraniumResupplyValue = Math.min(
                                 G.uraniumSupply,
                                 G.uraniumResupply![G.players.length - 2][G.step - 1],
@@ -1713,11 +1718,12 @@ export function move(
                         const garbagePrices = G.garbagePrices ?? prices[ResourceType.Garbage];
                         price = garbagePrices[garbagePrices.length - G.garbageMarket];
 
-                        // $1 cheaper for players in Wien in Central Europe
+                        // $1 cheaper for players in Wien in Central Europe, but never below $1
+                        // (maps-benelux-central-europe.pdf p.2)
                         if (G.map.name == 'Central Europe') {
                             const wienCity = player.cities.filter((c) => c.name == 'Wien');
                             if (wienCity?.length > 0) {
-                                price--;
+                                price = Math.max(1, price - 1);
                             }
                         }
 
@@ -1891,6 +1897,10 @@ export function move(
         player.clockStartedAt = move.poweringClock.clockStartedAt;
     }
     if (initialPhase === Phase.Bureaucracy) finishPoweringLog(G, playerNumber, initialRound, move);
+
+    if (G.middleEastStep2Pending && G.phase != initialPhase && G.phase != Phase.GameEnd) {
+        enterStepTwoMiddleEast(G);
+    }
 
     G.currentPlayers.forEach((p) => (G.players[p].availableMoves = availableMoves(G, G.players[p])));
 
@@ -2262,7 +2272,17 @@ export function addPowerPlant(G: GameState): void {
             }
         }
 
-        if (G.options.variant == 'original' && G.map.name != 'China') {
+        // base-original-2013.pdf p.5: a drawn plant at or below any player's city count
+        // is removed and replaced. Baden-Württemberg never removes such plants
+        // (maps-quebec-baden-wurttemberg.pdf p.2, ruling R6). Russia replaces the standard
+        // rules for exchanging out-of-date plants with its first-pass removal
+        // (maps-russia-japan.pdf p.2), as when building and when everyone passes.
+        if (
+            G.options.variant == 'original' &&
+            G.map.name != 'China' &&
+            G.map.name != 'Baden-Württemberg' &&
+            G.map.name != 'Russia'
+        ) {
             const maxCities = Math.max(...G.players.map((p) => p.cities.length));
             while (powerPlant.number <= maxCities) {
                 G.log.push({
@@ -2284,48 +2304,59 @@ export function addPowerPlant(G: GameState): void {
                         }
                     }
                 } else {
-                    break;
+                    // The deck ran out: the too-small plant is still removed, and
+                    // nothing replaces it (base-original-2013.pdf p.5).
+                    arrangeMarket(G, [...G.actualMarket, ...G.futureMarket]);
+                    return;
                 }
             }
         }
 
-        let skipAdd = false;
         if (powerPlant.number == 99) {
             if (G.powerPlantDeckAfterStep3) {
                 G.powerPlantsDeck = G.powerPlantDeckAfterStep3;
-            } else if (G.map.name == 'China') {
-                startStep(G, 3);
-            } else {
+            } else if (G.map.name != 'China') {
                 G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
             }
 
-            if (G.phase != Phase.Auction) {
-                if (G.map.name == 'Middle East' && G.step == 1) {
-                    // Add step 3 card to market, then trigger step 2 process.
-                    const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
-                    market.sort((a, b) => a.number - b.number);
-                    G.actualMarket = market.slice(0, 4);
-                    G.futureMarket = market.slice(4);
-                    enterStepTwoMiddleEast(G);
-                    skipAdd = true;
-                } else {
-                    if (G.map.name == 'UK & Ireland' && G.step == 1) {
-                        // UK&I: Step 3 sits 3rd from last in the deck, so it can
-                        // surface before any player hits citiesToStep2. Fire Step
-                        // 2 here so its rules register before Step 3 takes over.
-                        startStep(G, 2, 'Starting Step 2 (Step 3 card drawn before Step 2 threshold).');
+            // Middle East: the first Step 3 card brings Step 2 at the start of the next
+            // phase. Shuffle the stack, put the card back under it, and carry on with
+            // this phase by drawing a replacement (maps-middle-east-south-africa.pdf p.2).
+            if (G.map.name == 'Middle East' && G.step == 1) {
+                G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
+                G.powerPlantsDeck.push(powerPlant);
+                if (!G.middleEastStep2Pending) {
+                    G.middleEastStep2Pending = true;
+                    G.log.push({ type: 'event', event: 'Step 2 will begin next phase.' });
+                    if (G.powerPlantsDeck.length > 1) {
+                        addPowerPlant(G);
                     }
-                    const powerPlantDiscarded = G.actualMarket.shift();
-                    G.log.push({
-                        type: 'event',
-                        event: `Step 3 will begin next phase, Power Plant ${powerPlantDiscarded?.number} discarded.`,
-                    });
-
-                    const market = [...G.actualMarket, ...G.futureMarket];
-                    market.sort((a, b) => a.number - b.number);
-                    G.actualMarket = market;
-                    G.futureMarket = [];
                 }
+                return;
+            }
+
+            // Step 3 before Step 2: first make the Step 2 changes, then continue with
+            // Step 3's (base-recharged.pdf p.8; both variants, every map). A card drawn
+            // in an auction waits for the end of the phase (toResourcesPhase).
+            if (G.step == 1 && G.phase != Phase.Auction) {
+                enterStepTwo(G, 'Starting Step 2 before Step 3');
+            }
+
+            if (G.map.name == 'China' && !G.powerPlantDeckAfterStep3) {
+                startStep(G, 3);
+            }
+
+            if (G.phase != Phase.Auction) {
+                const powerPlantDiscarded = G.actualMarket.shift();
+                G.log.push({
+                    type: 'event',
+                    event: `Step 3 will begin next phase, Power Plant ${powerPlantDiscarded?.number} discarded.`,
+                });
+
+                const market = [...G.actualMarket, ...G.futureMarket];
+                market.sort((a, b) => a.number - b.number);
+                G.actualMarket = market;
+                G.futureMarket = [];
             }
         } else {
             if (G.plantDiscountActive && powerPlant.number < G.actualMarket[0].number) {
@@ -2346,38 +2377,41 @@ export function addPowerPlant(G: GameState): void {
             market.sort((a, b) => a.number - b.number);
             G.actualMarket = market;
         } else {
-            if (!skipAdd) {
-                const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
-                market.sort((a, b) => a.number - b.number);
-                if (G.futureMarket.length == 0) {
-                    if (G.map.name == 'Russia') {
-                        // Only four plants in market.
-                        G.actualMarket = market.slice(0, 4);
-                        G.futureMarket = [];
-                    } else {
-                        G.actualMarket = market.slice(0, 6);
-                        G.futureMarket = [];
-                    }
-                } else {
-                    if (G.map.name == 'Russia') {
-                        // Only 3 plants in actual market and 3 in future market.
-                        G.actualMarket = market.slice(0, 3);
-                        G.futureMarket = market.slice(3);
-                    } else if (G.map.name == 'Benelux' && market[4].type == PowerPlantType.Wind) {
-                        // Add extra ecological plant to actual market.
-                        G.actualMarket = market.slice(0, 5);
-                        G.futureMarket = market.slice(5);
-                    } else {
-                        G.actualMarket = market.slice(0, 4);
-                        G.futureMarket = market.slice(4);
-                    }
-                }
-
-                if (G.map.name == 'Middle East' && G.step == 1) {
-                    removePlantsForMiddleEastStep1(G);
-                }
-            }
+            arrangeMarket(G, [...G.actualMarket, ...G.futureMarket, powerPlant]);
         }
+    }
+}
+
+// Sorts the market plants and splits them into the current and future markets.
+function arrangeMarket(G: GameState, market: PowerPlant[]) {
+    market.sort((a, b) => a.number - b.number);
+    if (G.futureMarket.length == 0) {
+        if (G.map.name == 'Russia') {
+            // Only four plants in market.
+            G.actualMarket = market.slice(0, 4);
+            G.futureMarket = [];
+        } else {
+            G.actualMarket = market.slice(0, 6);
+            G.futureMarket = [];
+        }
+    } else {
+        if (G.map.name == 'Russia') {
+            // Only 3 plants in actual market and 3 in future market.
+            G.actualMarket = market.slice(0, 3);
+            G.futureMarket = market.slice(3);
+        } else if (G.map.name == 'Benelux' && isEcological(market[4])) {
+            // Add extra ecological plant to actual market (maps-benelux-central-europe.pdf
+            // p.2); fusion counts as ecological (base-recharged.pdf p.3).
+            G.actualMarket = market.slice(0, 5);
+            G.futureMarket = market.slice(5);
+        } else {
+            G.actualMarket = market.slice(0, 4);
+            G.futureMarket = market.slice(4);
+        }
+    }
+
+    if (G.map.name == 'Middle East' && G.step == 1) {
+        removePlantsForMiddleEastStep1(G);
     }
 }
 
@@ -2521,13 +2555,13 @@ export function applyManhattanDepletionOnEmptyDeck(G: GameState): void {
             event: 'The draw deck is empty — reshuffling the recycle pile into a new deck.',
         });
     } else if (G.manhattanDepletion == 1) {
+        // The whole market becomes buyable only from the next round
+        // (maps-bremen-manhattan.pdf p.1). Until then the future market stays as it
+        // is; the Bureaucracy lifecycle (stage 2) collapses it.
         G.manhattanDepletion = 2;
-        const market = [...G.actualMarket, ...G.futureMarket].sort((a, b) => a.number - b.number);
-        G.actualMarket = market;
-        G.futureMarket = [];
         G.log.push({
             type: 'event',
-            event: 'The deck is empty for the second time — the entire market is now buyable.',
+            event: 'The deck is empty for the second time — the entire market is buyable from the next round.',
         });
     }
 }
@@ -2581,6 +2615,34 @@ function removePlantsForMiddleEastStep1(G: GameState) {
     }
 }
 
+// The start of Step 2: remove the lowest plant once and replace it
+// (base-recharged.pdf p.7, base-original-2013.pdf p.6), with the maps' own changes.
+function enterStepTwo(G: GameState, reason = 'Starting Step 2') {
+    const powerPlant = G.actualMarket.shift()!;
+    startStep(G, 2, `${reason}, Power Plant ${powerPlant?.number} discarded.`);
+
+    // Spain & Portugal: put plants 18, 22 and 27 on top
+    if (G.map.name == 'Spain & Portugal') {
+        if (!G.powerPlantsDeck.find((p) => p.number == 18)) {
+            G.powerPlantsDeck.unshift(getPowerPlant(27));
+            G.powerPlantsDeck.unshift(getPowerPlant(22));
+            G.powerPlantsDeck.unshift(getPowerPlant(18));
+        }
+    }
+
+    if (G.map.name == 'Europe') {
+        // Europe: do NOT draw a replacement from the deck.
+        // The future market shrinks from 5 to 4; reorganize
+        // the remaining 8 plants so actual stays at 4.
+        const market = [...G.actualMarket, ...G.futureMarket];
+        market.sort((a, b) => a.number - b.number);
+        G.actualMarket = market.slice(0, 4);
+        G.futureMarket = market.slice(4);
+    } else {
+        addPowerPlant(G);
+    }
+}
+
 function startStep(G: GameState, step: 2 | 3, event = `Starting Step ${step}.`) {
     if (G.step === step) return;
     G.step = step;
@@ -2591,35 +2653,27 @@ function startStep(G: GameState, step: 2 | 3, event = `Starting Step ${step}.`) 
     (G.pendingMessages ??= []).push(`Starting Step ${step}.`);
 }
 
+// Middle East: Step 2 begins at the start of the phase after the first Step 3 card
+// was drawn. Remove the two lowest plants, one after the other, drawing a replacement
+// after each (maps-middle-east-south-africa.pdf p.2). This comes before the
+// discount token is placed on the smallest plant.
 function enterStepTwoMiddleEast(G: GameState) {
-    // Shuffle deck of remaining power plants and put step 3 card back underneath.
-    const step3 = G.futureMarket.pop()!;
-    G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
-    G.powerPlantsDeck.push(step3);
+    G.middleEastStep2Pending = undefined;
+    startStep(G, 2, 'Starting Step 2, discarding two power plants.');
 
-    // Draw new plant to replace step 3 card.
-    addPowerPlant(G);
-
-    // Discard two lowest power plants from current market.
-    startStep(G, 2, 'Step 2 will begin next phase, discarding two power plants.');
-
-    const powerPlantDiscarded1 = G.actualMarket.shift();
-    if (powerPlantDiscarded1) {
-        G.log.push({
-            type: 'event',
-            event: `Power Plant ${powerPlantDiscarded1.number} discarded to start step 2.`,
-        });
-        addPowerPlant(G);
+    const plantDiscountActive = G.plantDiscountActive;
+    G.plantDiscountActive = false;
+    for (let i = 0; i < 2; i++) {
+        const powerPlantDiscarded = G.actualMarket.shift();
+        if (powerPlantDiscarded) {
+            G.log.push({
+                type: 'event',
+                event: `Power Plant ${powerPlantDiscarded.number} discarded to start step 2.`,
+            });
+            addPowerPlant(G);
+        }
     }
-
-    const powerPlantDiscarded2 = G.actualMarket.shift();
-    if (powerPlantDiscarded2) {
-        G.log.push({
-            type: 'event',
-            event: `Power Plant ${powerPlantDiscarded2.number} discarded to start step 2.`,
-        });
-        addPowerPlant(G);
-    }
+    G.plantDiscountActive = plantDiscountActive;
 }
 
 // Australia CO2 tax: when Step 3 begins, the $1 and $2 resource spaces close for
@@ -2939,17 +2993,17 @@ function toResourcesPhase(G: GameState) {
     }
 
     if (G.futureMarket.find((pp) => pp.number == 99)) {
-        if (G.map.name == 'Middle East' && G.step == 1) {
-            enterStepTwoMiddleEast(G);
-        } else {
-            const powerPlantDiscarded = G.actualMarket.shift();
-            G.futureMarket.pop();
-            startStep(G, 3, `Starting Step 3, Power Plant ${powerPlantDiscarded?.number} discarded.`);
-            applyAustraliaStep3Shift(G);
-
-            G.actualMarket = [...G.actualMarket, ...G.futureMarket];
-            G.futureMarket = [];
+        // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
+        if (G.step == 1) {
+            enterStepTwo(G, 'Starting Step 2 before Step 3');
         }
+        const powerPlantDiscarded = G.actualMarket.shift();
+        G.futureMarket.pop();
+        startStep(G, 3, `Starting Step 3, Power Plant ${powerPlantDiscarded?.number} discarded.`);
+        applyAustraliaStep3Shift(G);
+
+        G.actualMarket = [...G.actualMarket, ...G.futureMarket];
+        G.futureMarket = [];
     }
 
     G.phase = Phase.Resources;

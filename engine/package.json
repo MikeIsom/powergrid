@@ -24,7 +24,8 @@
 		"build": "npm run clean && tsc",
 		"clean": "rm -Rf dist",
 		"lint": "eslint . --ext .ts",
-		"test": "mocha -r ts-node/register src/*.spec.ts"
+		"test": "mocha -r ts-node/register src/*.spec.ts",
+		"stress": "ts-node --transpile-only scripts/stress.ts"
 	},
 	"dependencies": {
 		"delaunator": "^4.0.0",

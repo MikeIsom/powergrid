@@ -211,6 +211,8 @@ describe('current-round planning and premoves', () => {
     it('stops when an extra house slot changes the planned price', async () => {
         let G = position();
         G.step = 2;
+        // A connection, not a first house: a first house may only go in an empty city.
+        G.players[0].cities = [{ name: G.map.cities[0].name, position: 0 }];
         const phases = fullPlan(G);
         G = await wrapper.move(G, request(phases), 0);
         G.players[1].cities.push({ name: (phases[0].moves[0].data as any).name, position: 0 });

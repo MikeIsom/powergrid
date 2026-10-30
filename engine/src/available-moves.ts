@@ -182,7 +182,9 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     if (G.chosenPowerPlant == undefined) {
                         let canBid = G.actualMarket.filter((p) => player.money >= minimumPlantBid(G, p));
 
-                        // No nuclear plants for Portugal
+                        // No nuclear plants for players whose cities are all in Portugal
+                        // (maps-brazil-spain-portugal.pdf p.2). By the owner's ruling a player
+                        // with no cities may not buy them either: they need a city in Spain.
                         if (G.map.name == 'Spain & Portugal') {
                             const playerCities = player.cities.map(
                                 (c) => G.map.cities.find((c_) => c_.name == c.name)!
@@ -448,11 +450,12 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                 const garbagePrices = G.garbagePrices ?? prices[ResourceType.Garbage];
                 let price = garbagePrices[garbagePrices.length - G.garbageMarket];
 
-                // $1 cheaper for players in Wien in Central Europe
+                // $1 cheaper for players in Wien in Central Europe, but never below $1
+                // (maps-benelux-central-europe.pdf p.2)
                 if (G.map.name == 'Central Europe') {
                     const wienCity = player.cities.filter((c) => c.name == 'Wien');
                     if (wienCity?.length > 0) {
-                        price--;
+                        price = Math.max(1, price - 1);
                     }
                 }
 
@@ -559,6 +562,15 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     }
                     const othersCount = G.players.filter((p) => p.cities.find((c) => city.name == c.name)).length;
 
+                    // A player's first house goes in an empty city, in every step:
+                    // base-recharged.pdf p.5 ("any empty city") and base-original-2013.pdf p.4
+                    // ("any city (not already chosen by another player)"). Japan's starting
+                    // cities have two first-house spaces (maps-russia-japan.pdf p.2).
+                    if (player.cities.length == 0 && othersCount > 0 && !japanStartingCities.has(city.name)) {
+                        city.price = 9999;
+                        return;
+                    }
+
                     // Transregional cities (e.g. Strasbourg on Baden-Württemberg) are only open
                     // in Step 2 onward. The slot fee is replaced by a flat 15 (Step 2) or 20
                     // (Step 3); the dijkstra connection cost from the player's existing network
@@ -586,13 +598,13 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     }
 
                     // UK & Ireland: starting a network on an island where the player has
-                    // no city yet pays the first-house base + crossIslandSurcharge. There
-                    // is no sea edge so dijkstra reports the target city as unreachable
+                    // no city yet pays crossIslandSurcharge as its connection. There is no
+                    // sea edge so dijkstra reports the target city as unreachable
                     // (price=9999); we override here. The first build ever (player.cities
                     // empty) goes through the normal first-build path and pays no surcharge.
-                    // The jump can only START a city — an empty one (first house). Cities
-                    // already holding a house are not reachable via the jump, even in
-                    // Steps 2/3 when their later slots are open to same-island networks.
+                    // Ruling R3 (engine-update-scope.md): the jump may go into any city of
+                    // the other island with an open slot, paying the surcharge plus that
+                    // slot's building cost, which the slot pricing below adds.
                     if (cityData.island && G.map.crossIslandSurcharge !== undefined && player.cities.length > 0) {
                         const playerIslands = new Set(
                             player.cities
@@ -600,8 +612,7 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                                 .filter((i): i is string => !!i)
                         );
                         if (!playerIslands.has(cityData.island)) {
-                            city.price = othersCount > 0 ? 9999 : 10 + G.map.crossIslandSurcharge;
-                            return;
+                            city.price = G.map.crossIslandSurcharge;
                         }
                     }
 

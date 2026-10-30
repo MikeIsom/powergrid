@@ -456,7 +456,7 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                 if (G.map.name == 'Central Europe') {
                     const wienCity = player.cities.filter((c) => c.name == 'Wien');
                     if (wienCity?.length > 0) {
-                        price = Math.max(1, price - 1);
+                        price = rulesApply(G.options, 'wienDiscountFloor') ? Math.max(1, price - 1) : price - 1;
                     }
                 }
 

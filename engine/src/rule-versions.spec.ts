@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
-import { addPowerPlant, getPowerPlant, move, setup } from './engine';
-import { GameOptions, GameState, Phase } from './gamestate';
+import { addPowerPlant, getPowerPlant, move, setup, updatePlayerCapacity } from './engine';
+import { GameOptions, GameState, Phase, ResourceType } from './gamestate';
 import { MoveName } from './move';
 import { rulesApply } from './rule-versions';
 
@@ -151,5 +151,24 @@ describe('Rule versions', () => {
     it('brazilStartingBiogas: starts Brazil, Recharged, with 9 biogas from version 14', () => {
         expect(setup(3, { map: 'Brazil', variant: 'recharged', version: 13 }, 'versions').garbageMarket).to.equal(6);
         expect(setup(3, { map: 'Brazil', variant: 'recharged', version: 14 }, 'versions').garbageMarket).to.equal(9);
+    });
+
+    it('wienDiscountFloor: charges at least 1 for Wien garbage from version 14', () => {
+        const cost = (version: number) => {
+            let G = setup(3, { map: 'Central Europe', variant: 'recharged', version }, 'versions');
+            G.phase = Phase.Resources;
+            const player = G.players[0];
+            G.currentPlayers = [player.id];
+            player.cities = [{ name: 'Wien', position: 0 }];
+            player.powerPlants = plants(6);
+            updatePlayerCapacity(player);
+            G.garbageMarket = 24;
+            const money = player.money;
+            player.availableMoves = availableMoves(G, player);
+            G = move(G, { name: MoveName.BuyResource, data: { resource: ResourceType.Garbage } }, player.id);
+            return money - G.players[0].money;
+        };
+        expect(cost(13)).to.equal(0);
+        expect(cost(14)).to.equal(1);
     });
 });

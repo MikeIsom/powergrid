@@ -25,6 +25,8 @@ export const ruleVersions = {
     firstHouseInEmptyCity: 14,
     // Brazil, Recharged: starts with 9 biogas, not 6 (F9).
     brazilStartingBiogas: 14,
+    // Central Europe: the Wien garbage discount never goes below 1 (F11).
+    wienDiscountFloor: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

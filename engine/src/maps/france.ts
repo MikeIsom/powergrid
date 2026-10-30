@@ -1,7 +1,8 @@
 import { cloneDeep } from 'lodash';
 import seedrandom from 'seedrandom';
 import { getPowerPlant } from '../engine';
-import { PowerPlant } from '../gamestate';
+import { GameOptions, PowerPlant } from '../gamestate';
+import { rulesApply } from '../rule-versions';
 import { shuffle } from '../utils';
 import { GameMap } from './../maps';
 import { powerPlants } from './../powerPlants';
@@ -235,7 +236,13 @@ export const map: GameMap = {
         ],
     ],
     startingResources: [24, 18, 6, 8],
-    setupDeck(numPlayers: number, variant: string, rng: seedrandom.prng) {
+    setupDeck(
+        numPlayers: number,
+        variant: string,
+        rng: seedrandom.prng,
+        deck?: PowerPlant[],
+        options: GameOptions = {}
+    ) {
         let powerPlantsDeck = cloneDeep(powerPlants);
         let actualMarket: PowerPlant[];
         let futureMarket: PowerPlant[];
@@ -277,7 +284,8 @@ export const map: GameMap = {
             // maps-france-italy.pdf p.2 only drops the plug removals (none at 2 and 4
             // players, one at 3); the socket removals stay at 5/6/3 (base-recharged.pdf p.3).
             if (numPlayers == 2) {
-                powerPlantsDeck = shuffle(powerPlantsDeck.slice(5).concat(initialPowerPlants), rng() + '');
+                const sockets = rulesApply(options, 'france2pSocketRemovals') ? 5 : 6;
+                powerPlantsDeck = shuffle(powerPlantsDeck.slice(sockets).concat(initialPowerPlants), rng() + '');
             } else if (numPlayers == 3) {
                 initialPowerPlants = initialPowerPlants.slice(1);
                 powerPlantsDeck = shuffle(powerPlantsDeck.slice(6).concat(initialPowerPlants), rng() + '');

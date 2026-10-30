@@ -1,5 +1,5 @@
 import seedrandom from 'seedrandom';
-import { PowerPlant } from './gamestate';
+import { GameOptions, PowerPlant } from './gamestate';
 import { map as america, mapRecharged as americaRecharged } from './maps/america';
 import { map as australia } from './maps/australia';
 import { map as badenwurttemberg } from './maps/badenwurttemberg';
@@ -122,7 +122,9 @@ export interface GameMap {
         numPlayers: number,
         variant: string,
         rng: seedrandom.prng,
-        deck?: PowerPlant[]
+        deck?: PowerPlant[],
+        // For rules gated by the version option (rule-versions.ts).
+        options?: GameOptions
     ) => {
         actualMarket: PowerPlant[];
         futureMarket: PowerPlant[];

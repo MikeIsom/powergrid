@@ -171,4 +171,13 @@ describe('Rule versions', () => {
         expect(cost(13)).to.equal(0);
         expect(cost(14)).to.equal(1);
     });
+
+    it('france2pSocketRemovals: removes 5 socket plants on France Recharged 2P from version 14', () => {
+        const inGame = (version: number) => {
+            const G = setup(2, { map: 'France', variant: 'recharged', version }, 'versions');
+            return G.actualMarket.length + G.futureMarket.length + G.powerPlantsDeck.length - 1;
+        };
+        expect(inGame(13)).to.equal(35);
+        expect(inGame(14)).to.equal(36);
+    });
 });

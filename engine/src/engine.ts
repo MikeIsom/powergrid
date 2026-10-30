@@ -174,7 +174,7 @@ export function setup(
             numPlayers,
             variant,
             rng,
-            useNewRechargedSetup,
+            { useNewRechargedSetup, version },
             alternateDeck ? deck : undefined
         ));
     }
@@ -352,7 +352,7 @@ export function setup(
                     numPlayers,
                     variant,
                     seedrandom(seed),
-                    useNewRechargedSetup,
+                    { useNewRechargedSetup, version },
                     withRegionalPlants(deck, chosenMap, playRegions)
                 ));
             }
@@ -581,12 +581,12 @@ function prepareDeck(
     numPlayers: number,
     variant: Variant,
     rng: seedrandom.prng,
-    useNewRechargedSetup: boolean,
+    options: GameOptions,
     catalogue?: PowerPlant[]
 ) {
     return map.setupDeck
-        ? map.setupDeck(numPlayers, variant, rng, catalogue)
-        : defaultSetupDeck(numPlayers, variant, rng, useNewRechargedSetup, catalogue);
+        ? map.setupDeck(numPlayers, variant, rng, catalogue, options)
+        : defaultSetupDeck(numPlayers, variant, rng, options.useNewRechargedSetup ?? true, catalogue);
 }
 
 // Northern Europe: each region in play adds its two plants and boxes the plants with
@@ -627,7 +627,7 @@ function finalizeRegions(G: GameState) {
             G.players.length,
             variant,
             seedrandom(G.seed),
-            G.options.useNewRechargedSetup ?? true,
+            G.options,
             withRegionalPlants(catalogue, mapData, playRegions)
         ));
     }

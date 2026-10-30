@@ -27,6 +27,8 @@ export const ruleVersions = {
     brazilStartingBiogas: 14,
     // Central Europe: the Wien garbage discount never goes below 1 (F11).
     wienDiscountFloor: 14,
+    // France, Recharged, 2 players: remove 5 socket plants, not 6 (F10).
+    france2pSocketRemovals: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

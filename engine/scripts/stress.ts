@@ -4,7 +4,7 @@
 //
 //   npx ts-node --transpile-only scripts/stress.ts [--games 200] [--cap 3000]
 //       [--variant original,recharged] [--maps USA,Germany] [--players 2,3,4,5,6]
-//       [--deck standard,set1,set2] [--workers 8] [--json out.json]
+//       [--deck standard,set1,set2,shuffled,random] [--workers 8] [--json out.json]
 //
 // A game is "stuck" when it hasn't ended and nobody has a move, and "capped" when it
 // hits the move cap first.
@@ -12,6 +12,7 @@ import { fork } from 'child_process';
 import { writeFileSync } from 'fs';
 import seedrandom from 'seedrandom';
 import { availableMoves } from '../src/available-moves';
+import { SHUFFLED_EXCLUDED_MAPS } from '../src/deck-notes';
 import { ended, move, setup } from '../src/engine';
 import { GameState, MapName, Phase, PlantDeck, Variant } from '../src/gamestate';
 import { maps, mapsRecharged } from '../src/maps';
@@ -157,6 +158,8 @@ function main() {
         for (const variant of variants) {
             const mapNames = (variant == 'original' ? maps : mapsRecharged).map((m) => m.name as MapName);
             for (const map of a.maps ? mapNames.filter((m) => a.maps.split(',').includes(m)) : mapNames) {
+                // A shuffled deck is not allowed on the maps whose notes rebuild the deck.
+                if (deck == 'shuffled' && SHUFFLED_EXCLUDED_MAPS.includes(map)) continue;
                 for (const n of players) jobs.push({ variant, deck, map, players: n, games, cap });
             }
         }

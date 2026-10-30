@@ -301,3 +301,7 @@ export const map: GameMap = {
             'power plant 13 is removed from the game; power ' + 'plant 11 is placed on top of the deck in its place.',
     },
 };
+
+// Recharged: garbage starts on spaces 6–8, i.e. 9 tokens (maps-france-italy.pdf p.2, a change to the
+// Recharged rules). Original keeps 6 (owner's ruling).
+export const mapRecharged: GameMap = { ...map, startingResources: [24, 18, 9, 8] };

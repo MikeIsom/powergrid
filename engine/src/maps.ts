@@ -9,7 +9,7 @@ import { map as bremen } from './maps/bremen';
 import { map as centraleurope } from './maps/centraleurope';
 import { map as china } from './maps/china';
 import { map as europe } from './maps/europe';
-import { map as france } from './maps/france';
+import { map as france, mapRecharged as franceRecharged } from './maps/france';
 import { map as germany, mapRecharged as germanyRecharged } from './maps/germany';
 import { map as indian } from './maps/indian';
 import { map as italy } from './maps/italy';
@@ -191,7 +191,7 @@ export const mapsRecharged: GameMap[] = [
     germanyRecharged,
     brazil,
     spainportugal,
-    france,
+    franceRecharged,
     indian,
     italy,
     quebec,

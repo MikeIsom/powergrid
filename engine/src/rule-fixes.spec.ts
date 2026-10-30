@@ -346,4 +346,19 @@ describe('Rule fixes', () => {
             expect(G.powerPlantsDeck[G.powerPlantsDeck.length - 1].number, `${n} players`).to.equal(99);
         }
     });
+
+    it('C5: adds Benelux fusion plant 50 to the current market as an ecological plant', () => {
+        for (const variant of variants) {
+            const G = setup(3, { map: 'Benelux', variant }, 'c5');
+            G.step = 2;
+            G.actualMarket = plants(36, 38, 39);
+            G.futureMarket = plants(50);
+            G.powerPlantsDeck = plants(40, 42);
+            addPowerPlant(G);
+            expect(
+                G.actualMarket.map((p) => p.number),
+                variant
+            ).to.deep.equal([36, 38, 39, 40, 50]);
+        }
+    });
 });

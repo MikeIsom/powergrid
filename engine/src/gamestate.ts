@@ -292,6 +292,13 @@ export function isUraniumMine(G: GameState, plant: PowerPlant): boolean {
     return G.map.name === 'Australia' && plant.type === PowerPlantType.Uranium;
 }
 
+// Ecological plants need no fuel: the green wind plants and the blue fusion plant
+// (PowerPlantType.Nuclear). base-recharged.pdf p.3: "Ecological power plants have a
+// green or blue color." Québec, an Original-edition map, counts only the green ones.
+export function isEcological(plant: PowerPlant): boolean {
+    return plant.type === PowerPlantType.Wind || plant.type === PowerPlantType.Nuclear;
+}
+
 // Total time a player has spent on the clock, in milliseconds, including the clock
 // that is currently running (if any). `now` is the wall-clock time to measure a
 // running clock against — pass Date.now() for a live display. Without it, only

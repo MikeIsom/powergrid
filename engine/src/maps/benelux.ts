@@ -206,5 +206,5 @@ export const map: GameMap = {
     playerBoardsPosition: [1170, 200],
     actualMarketWidth: 495,
     mapSpecificRules:
-        'Ecological plants can enter the market earlier. Remove smallest power plant after each round (unless discount plant was removed).',
+        'Ecological plants (wind and fusion) can enter the market earlier. Remove smallest power plant after each round (unless discount plant was removed).',
 };

@@ -21,6 +21,7 @@ import {
     countHeldPowerPlants,
     GameOptions,
     GameState,
+    isEcological,
     isUraniumMine,
     MapName,
     Phase,
@@ -2391,8 +2392,9 @@ export function addPowerPlant(G: GameState): void {
                     // Only 3 plants in actual market and 3 in future market.
                     G.actualMarket = market.slice(0, 3);
                     G.futureMarket = market.slice(3);
-                } else if (G.map.name == 'Benelux' && market[4].type == PowerPlantType.Wind) {
-                    // Add extra ecological plant to actual market.
+                } else if (G.map.name == 'Benelux' && isEcological(market[4])) {
+                    // Add extra ecological plant to actual market (maps-benelux-central-europe.pdf
+                    // p.2); fusion counts as ecological (base-recharged.pdf p.3).
                     G.actualMarket = market.slice(0, 5);
                     G.futureMarket = market.slice(5);
                 } else {

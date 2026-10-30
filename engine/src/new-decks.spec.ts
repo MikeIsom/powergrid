@@ -1,10 +1,12 @@
 import { expect } from 'chai';
 import 'mocha';
+import seedrandom from 'seedrandom';
 import { availableMoves } from './available-moves';
 import { deckNote } from './deck-notes';
-import { calculateMaxCitiesPowered, move, setup, updatePlayerCapacity } from './engine';
+import { calculateMaxCitiesPowered, move, reconstructState, setup, updatePlayerCapacity } from './engine';
 import { GameState, hasPlug, MapName, Phase, plantLabel, PowerPlant, PowerPlantType, ResourceType } from './gamestate';
-import { MoveName } from './move';
+import { mapsRecharged } from './maps';
+import { Move, MoveName } from './move';
 import { alternatePowerPlants, plantCatalogue, powerPlants, set1PowerPlants } from './powerPlants';
 
 const { Coal, Oil, Garbage, Uranium, Hybrid, Wind, Nuclear, GarbageOilHybrid } = PowerPlantType;
@@ -526,4 +528,57 @@ describe('New power plant decks', () => {
         expect(plantLabel(set1PowerPlants.find((p) => p.number == 46))).to.equal('46+');
         expect(plantLabel(powerPlants.find((p) => p.number == 46))).to.equal('46');
     });
+
+    it('sets up every deck, map and player count reproducibly, and replays a seeded game', () => {
+        const randomMoves = (G: GameState, count: number, seed: string) => {
+            const rng = seedrandom(seed);
+            for (let i = 0; i < count && G.phase != Phase.GameEnd; i++) {
+                const p = G.currentPlayers.find((c) => Object.keys(G.players[c].availableMoves ?? {}).length > 0);
+                if (p === undefined) break;
+                const moves = G.players[p].availableMoves!;
+                const names = (Object.keys(moves) as MoveName[]).filter(
+                    (n) => n != MoveName.ReopenPowering && (moves[n] as unknown[] | undefined)?.length
+                );
+                const name =
+                    names.includes(MoveName.Pass) && rng() < 0.3
+                        ? MoveName.Pass
+                        : names[Math.floor(rng() * names.length)];
+                const options = moves[name] as unknown[];
+                G = move(G, { name, data: options[Math.floor(rng() * options.length)] } as Move, p);
+            }
+            return G;
+        };
+        const summary = (G: GameState) =>
+            JSON.stringify([
+                G.round,
+                G.phase,
+                G.step,
+                numbers(G.actualMarket),
+                numbers(G.futureMarket),
+                G.players.map((p) => [p.money, numbers(p.powerPlants), p.cities.length]),
+            ]);
+        for (const deck of ['set1', 'set2'] as const) {
+            for (const map of mapsRecharged.map((m) => m.name as MapName)) {
+                for (const n of players) {
+                    const label = `${deck} ${map} ${n}p`;
+                    const first = game(deck, map, n);
+                    expect(JSON.stringify(game(deck, map, n)), `${label}: same seed, same setup`).to.equal(
+                        JSON.stringify(first)
+                    );
+                    const fixed = deckNote(deck, map).market ?? [];
+                    const market = [...first.actualMarket, ...first.futureMarket];
+                    // China deals from its ordered stack; Middle East replaces removed
+                    // garbage and nuclear plants with draws from the stack.
+                    if (map != 'China' && map != 'Middle East') {
+                        expect(
+                            market.every((p) => hasPlug(p) || fixed.includes(p.number)),
+                            `${label}: plug market`
+                        ).to.be.true;
+                    }
+                    const played = randomMoves(first, 120, label);
+                    expect(summary(reconstructState(played)), `${label}: replay`).to.equal(summary(played));
+                }
+            }
+        }
+    }).timeout(60000);
 });

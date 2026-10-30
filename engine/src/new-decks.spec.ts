@@ -85,9 +85,10 @@ describe('New power plant decks', () => {
         expect(hasPlug({ number: 16, type: Wind, cost: 0, citiesPowered: 2, plug: true })).to.be.true;
     });
 
-    it('rejects decks that are not available yet', () => {
-        expect(() => setup(3, { map: 'USA', variant: 'recharged', plantDeck: 'random' })).to.throw('not available yet');
-        expect(() => setup(3, { map: 'USA', variant: 'original', plantDeck: 'set1' })).to.throw('Recharged');
+    it('keeps the new decks to Recharged for now', () => {
+        for (const plantDeck of ['set1', 'set2', 'shuffled', 'random'] as const) {
+            expect(() => setup(3, { map: 'USA', variant: 'original', plantDeck }), plantDeck).to.throw('Recharged');
+        }
     });
 
     it('throws a clear error for a deck and map without map notes', () => {

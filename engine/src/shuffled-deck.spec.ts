@@ -179,3 +179,42 @@ describe('Shuffled power plant deck', () => {
         }
     }).timeout(60000);
 });
+
+describe('Random power plant deck', () => {
+    const random = (map: MapName, seed: string) => setup(4, { map, variant: 'recharged', plantDeck: 'random' }, seed);
+
+    it('picks the same deck for the same seed, and every deck across seeds', () => {
+        const picks = new Set<string>();
+        for (let i = 0; i < 40; i++) {
+            const pick = random('USA', `pick-${i}`).options.plantDeck;
+            expect(random('USA', `pick-${i}`).options.plantDeck).to.equal(pick);
+            picks.add(pick!);
+        }
+        expect([...picks].sort()).to.deep.equal(['set1', 'set2', 'shuffled', 'standard']);
+    });
+
+    it('never picks a shuffled deck on China, Bremen, Manhattan or Northern Europe', () => {
+        for (const map of SHUFFLED_EXCLUDED_MAPS as MapName[]) {
+            const picks = new Set<string>();
+            for (let i = 0; i < 40; i++) picks.add(random(map, `x-${i}`).options.plantDeck!);
+            expect([...picks].sort(), map).to.deep.equal(['set1', 'set2', 'standard']);
+        }
+    });
+
+    it('records the pick in the game state and the log, and replays it', () => {
+        for (let i = 0; i < 12; i++) {
+            const G = random('Germany', `rec-${i}`);
+            const pick = G.options.plantDeck!;
+            expect(G.options.randomPlantDeck).to.be.true;
+            const direct = setup(4, { map: 'Germany', variant: 'recharged', plantDeck: pick }, `rec-${i}`);
+            expect(numbers([...G.actualMarket, ...G.futureMarket, ...G.powerPlantsDeck]), pick).to.deep.equal(
+                numbers([...direct.actualMarket, ...direct.futureMarket, ...direct.powerPlantsDeck])
+            );
+            const logged = G.log.filter(
+                (l) => l.type == 'event' && l.event.startsWith('The power plant deck was picked at random')
+            );
+            expect(logged, pick).to.have.length(1);
+            expect(reconstructState(G).log, pick).to.deep.equal(G.log);
+        }
+    });
+});

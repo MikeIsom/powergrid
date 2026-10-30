@@ -142,6 +142,7 @@ export function setup(
         chooseColors = false,
         alternatePowerPlants = false,
         plantDeck = 'standard',
+        randomPlantDeck = false,
         version,
     }: GameOptions,
     seed?: string,
@@ -163,11 +164,17 @@ export function setup(
         throw new Error(`Map "${map}" not found for variant "${variant}"`);
     }
     const chosenMap = cloneDeep(chosenMapRaw);
-    if (plantDeck == 'random') {
-        throw new Error(`The ${plantDeck} power plant deck is not available yet.`);
-    }
     if (plantDeck != 'standard' && variant == 'original') {
         throw new Error('The New Power Plants decks are only available under Recharged rules for now.');
+    }
+    if (plantDeck == 'random') {
+        // A dedicated rng, so the pick doesn't shift the rest of the setup's draws. Never
+        // a shuffled deck where it is not allowed.
+        const deckRng = seedrandom(seed + '-deck');
+        const choices: PlantDeck[] = ['standard', 'set1', 'set2', 'shuffled'];
+        const allowed = choices.filter((d) => d != 'shuffled' || !SHUFFLED_EXCLUDED_MAPS.includes(chosenMap.name));
+        plantDeck = allowed[Math.floor(deckRng() * allowed.length)];
+        randomPlantDeck = true;
     }
     if (plantDeck == 'shuffled' && SHUFFLED_EXCLUDED_MAPS.includes(chosenMap.name)) {
         throw new Error(
@@ -482,7 +489,8 @@ export function setup(
             chooseColors,
             // Only stored when in effect, so states of every other game are unchanged.
             ...(alternateDeck ? { alternatePowerPlants: true } : {}),
-            ...(newDeck ? { plantDeck: newDeck } : {}),
+            // A random deck is stored as the deck picked, so a replay builds the same deck.
+            ...(randomPlantDeck ? { plantDeck, randomPlantDeck: true } : newDeck ? { plantDeck: newDeck } : {}),
             ...(version !== undefined ? { version } : {}),
         },
         log: [],
@@ -542,6 +550,15 @@ export function setup(
     } as GameState;
 
     G.log.push({ type: 'event', event: 'Game Start!' });
+    if (randomPlantDeck) {
+        const names: Record<string, string> = {
+            standard: 'the standard deck',
+            set1: 'The New Power Plants, Set 1',
+            set2: 'The New Power Plants, Set 2',
+            shuffled: 'a shuffled deck',
+        };
+        G.log.push({ type: 'event', event: `The power plant deck was picked at random: ${names[plantDeck]}.` });
+    }
 
     if (G.map.name == 'Middle East') {
         removePlantsForMiddleEastStep1(G);

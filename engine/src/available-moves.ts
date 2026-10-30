@@ -567,7 +567,12 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     // base-recharged.pdf p.5 ("any empty city") and base-original-2013.pdf p.4
                     // ("any city (not already chosen by another player)"). Japan's starting
                     // cities have two first-house spaces (maps-russia-japan.pdf p.2).
-                    if (player.cities.length == 0 && othersCount > 0 && !japanStartingCities.has(city.name)) {
+                    if (
+                        player.cities.length == 0 &&
+                        othersCount > 0 &&
+                        !japanStartingCities.has(city.name) &&
+                        rulesApply(G.options, 'firstHouseInEmptyCity')
+                    ) {
                         city.price = 9999;
                         return;
                     }

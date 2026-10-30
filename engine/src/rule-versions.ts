@@ -21,6 +21,8 @@ export const ruleVersions = {
     noTooSmallLastCard: 14,
     // The Step 2 changes come first when Step 3 begins during Step 1 (F6).
     stepTwoBeforeStepThree: 14,
+    // A first house only goes in an empty city, in every step (F7).
+    firstHouseInEmptyCity: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

@@ -134,4 +134,17 @@ describe('Rule versions', () => {
         expect(events(13)).to.include('Step 3 will begin next phase, Power Plant 10 discarded.');
         expect(events(14)).to.include('Starting Step 2 before Step 3, Power Plant 10 discarded.');
     });
+
+    it('firstHouseInEmptyCity: keeps a first house out of occupied cities from version 14', () => {
+        const price = (version: number) => {
+            const G = setup(3, { map: 'Germany', variant: 'recharged', version }, 'versions');
+            G.phase = Phase.Building;
+            G.step = 2;
+            const occupied = G.map.cities[0];
+            G.players[1].cities = [{ name: occupied.name, position: 0 }];
+            return availableMoves(G, G.players[0])[MoveName.Build]?.find((b) => b.name == occupied.name)?.price;
+        };
+        expect(price(13)).to.equal(15);
+        expect(price(14)).to.be.undefined;
+    });
 });

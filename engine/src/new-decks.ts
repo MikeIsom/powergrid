@@ -1,6 +1,6 @@
 import seedrandom from 'seedrandom';
 import { deckBox, deckNote, NewDeck } from './deck-notes';
-import { hasPlug, PowerPlant, PowerPlantType } from './gamestate';
+import { faceValue, hasPlug, PowerPlant, PowerPlantType } from './gamestate';
 import { GameMap } from './maps';
 import { shuffle } from './utils';
 
@@ -18,6 +18,8 @@ interface MapPreparation {
     protect?: (plant: PowerPlant) => boolean;
     // Plants placed under the Step 3 card.
     belowStepThree: number;
+    // A map that builds its own stack instead of the standard preparation.
+    stack?: 'china' | 'manhattan';
 }
 
 // base-recharged.pdf p.3: 8 plug cards to the market, one more set aside for the top of
@@ -31,12 +33,23 @@ const standard: MapPreparation = {
 };
 
 const mapPreparations: Record<string, Partial<MapPreparation>> = {
+    // Bremen: the market and stack are prepared without removing further plants
+    // (maps-bremen-manhattan.pdf p.2).
+    Bremen: { plugRemovals: [0, 0, 0, 0, 0], socketRemovals: [0, 0, 0, 0, 0] },
+    // China: plants up to 30 in ascending order on top, then 31–35 shuffled with the
+    // Step 3 card, then the rest shuffled; the round 1 market is the lowest plant for
+    // each player, with no future market (maps-china-korea.pdf p.2).
+    China: { stack: 'china' },
     // France: no further plug removal with 2 and 4 players, one with 3 (maps-france-italy.pdf p.2).
     France: { plugRemovals: [0, 1, 0, 0, 0] },
     // Québec: ecological plants are never removed at random (maps-quebec-baden-wurttemberg.pdf p.2).
     // Only the green (wind) plants count: base-original-2013.pdf p.4 keeps "Ecological and
     // Fusion Power Plants" apart (owner's ruling).
     Quebec: { protect: (p) => p.type == PowerPlantType.Wind },
+    // Manhattan: the Step 3 card is boxed; some plug cards are boxed, 8 of the others
+    // go to the market and any left go on top of the shuffled socket cards
+    // (maps-bremen-manhattan.pdf p.2).
+    Manhattan: { stack: 'manhattan' },
     // Russia: a market of 3 + 3, the undrawn plug cards on top of the stack, and only
     // socket cards removed: 6, 8 and 4 with 2, 3 and 4 players (maps-russia-japan.pdf p.2).
     Russia: { market: [3, 3], plugsOnTop: 'all', plugRemovals: [0, 0, 0, 0, 0], socketRemovals: [6, 8, 4, 0, 0] },
@@ -67,7 +80,7 @@ export function prepareNewDeck(
 ): PreparedDeck {
     const note = deckNote(deck, map.name);
     const prep = mapPreparation(map.name);
-    const boxed = new Set([...deckBox[deck], ...(note.box ?? [])]);
+    const boxed = new Set([...deckBox[deck], ...(note.box ?? []), ...(note.boxByPlayers?.[numPlayers] ?? [])]);
     let cards = catalogue.filter((p) => !boxed.has(p.number)).map((p) => ({ ...p }));
 
     // Europe prepares its own market and stack from the plug cards of any deck.
@@ -85,6 +98,33 @@ export function prepareNewDeck(
     const fixedMarket = take(note.market);
     const step3 = cards.find((p) => p.type == PowerPlantType.Step3)!;
     cards = cards.filter((p) => p != step3);
+
+    if (prep.stack == 'china') {
+        const low = cards.filter((p) => faceValue(p) <= 30).sort((a, b) => a.number - b.number);
+        const middle = shuffle([...cards.filter((p) => faceValue(p) > 30 && faceValue(p) <= 35), step3], rng() + '');
+        const high = shuffle(
+            cards.filter((p) => faceValue(p) > 35),
+            rng() + ''
+        );
+        return {
+            actualMarket: low.splice(0, numPlayers),
+            futureMarket: [],
+            powerPlantsDeck: [...low, ...middle, ...high],
+        };
+    }
+    if (prep.stack == 'manhattan') {
+        const plugCards = shuffle(cards.filter(hasPlug), rng() + '').slice(note.boxPlugs ?? 0);
+        const socketCards = shuffle(
+            cards.filter((p) => !hasPlug(p)),
+            rng() + ''
+        );
+        const opening = plugCards.splice(0, 8).sort((a, b) => a.number - b.number);
+        return {
+            actualMarket: opening.slice(0, 4),
+            futureMarket: opening.slice(4),
+            powerPlantsDeck: [...plugCards, ...socketCards],
+        };
+    }
 
     let plugs = shuffle(
         cards.filter((p) => hasPlug(p)),

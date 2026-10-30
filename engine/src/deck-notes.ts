@@ -22,6 +22,10 @@ export interface DeckNote {
     uraniumStop?: number;
     // No garbage can be bought during Step 1 (Middle East with Set 2).
     noGarbageInStepOne?: boolean;
+    // Boxed before preparation, by player count (China, Bremen, Manhattan).
+    boxByPlayers?: Record<number, number[]>;
+    // Manhattan: plug cards boxed at random before the rest go on top of the stack.
+    boxPlugs?: number;
 }
 
 // Boxed for every map. Set 1: 52, 54, 57 and 60 (plants-new-power-plants-set1.pdf p.2).
@@ -46,6 +50,27 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [8] },
         'South Africa': { box: [7] },
         Quebec: { market: [11, 15, 16] },
+        China: {
+            boxByPlayers: {
+                2: [1, 2, 8, 12, 15, 22, 27, 28, 32, 36, 42],
+                3: [1, 2, 8, 12, 15, 22, 27, 28, 32, 36, 42],
+                4: [1, 2, 8, 15, 27, 32, 36],
+                5: [1, 2, 32],
+                6: [1, 2, 32],
+            },
+        },
+        Bremen: {
+            boxByPlayers: {
+                2: [8, 19, 24, 31, 34, 37, 38, 42, 44, 46, 50],
+                3: [8, 19, 24, 31, 34, 37, 38, 42, 44, 46, 50],
+                4: [8, 19, 24, 31, 34, 37, 38, 42, 44, 46, 50],
+                5: [8, 19, 24, 31, 37, 38, 42, 46, 50],
+                6: [8, 19, 24, 31, 37, 38, 42, 46, 50],
+            },
+        },
+        // With 2 and 3 players, 16 is boxed and only 15 plug cards are left: boxing 7
+        // leaves 8, all of them for the market (owner's ruling, 2026-10-29).
+        Manhattan: { boxByPlayers: { 2: [16, 28, 38], 3: [16, 28, 38] }, boxPlugs: 7 },
         // 06 and 08 leave the current market by Middle East's own Step 1 rule: they are
         // its garbage and nuclear plants with a plug on the back.
         'Middle East': noChanges,
@@ -70,6 +95,25 @@ export const deckNotes: Record<NewDeck, Record<string, DeckNote>> = {
         India: { box: [13] },
         'South Africa': { box: [10] },
         Quebec: { market: [11], topOfStack: [17, 24] },
+        China: {
+            boxByPlayers: {
+                2: [3, 6, 10, 13, 17, 18, 25, 26, 31, 34, 35],
+                3: [3, 6, 10, 13, 17, 18, 25, 26, 31, 34, 35],
+                4: [3, 6, 13, 17, 26, 31, 35],
+                5: [3, 6, 31],
+                6: [3, 6, 31],
+            },
+        },
+        Bremen: {
+            boxByPlayers: {
+                2: [13, 21, 22, 32, 33, 34, 37, 38, 44, 46, 50],
+                3: [13, 21, 22, 32, 33, 34, 37, 38, 44, 46, 50],
+                4: [13, 21, 22, 32, 33, 34, 37, 38, 44, 46, 50],
+                5: [13, 21, 32, 33, 34, 37, 38, 46, 50],
+                6: [13, 21, 32, 33, 34, 37, 38, 46, 50],
+            },
+        },
+        Manhattan: { boxByPlayers: { 2: [22, 28, 36], 3: [22, 28, 36] }, boxPlugs: 4 },
         // 05, 13 and 14 leave the current market by Middle East's own Step 1 rule.
         'Middle East': { noGarbageInStepOne: true },
         Benelux: noChanges,

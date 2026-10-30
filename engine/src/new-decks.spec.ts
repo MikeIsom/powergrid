@@ -348,4 +348,72 @@ describe('New power plant decks', () => {
         expect(garbageOffered('set2', 2)).to.be.true;
         expect(garbageOffered('set1', 1)).to.be.true;
     });
+
+    it('prepares China: lowest plants for round 1, then up to 30 ascending, 31–35 with Step 3, the rest', () => {
+        const china: ['set1' | 'set2', Record<number, number[]>][] = [
+            ['set1', { 2: [1, 2, 8, 12, 15, 22, 27, 28, 32, 36, 42], 4: [1, 2, 8, 15, 27, 32, 36], 5: [1, 2, 32] }],
+            ['set2', { 2: [3, 6, 10, 13, 17, 18, 25, 26, 31, 34, 35], 4: [3, 6, 13, 17, 26, 31, 35], 5: [3, 6, 31] }],
+        ];
+        for (const [deck, boxedBy] of china) {
+            for (const n of players) {
+                const boxed = boxedBy[n <= 3 ? 2 : n == 4 ? 4 : 5];
+                const label = `${deck} ${n}p`;
+                const G = game(deck, 'China', n);
+                const all = numbers(inGame(G));
+                expect(
+                    all.some((p) => boxed.includes(p)),
+                    label
+                ).to.be.false;
+                expect(G.futureMarket, label).to.be.empty;
+                const low = numbers([...G.actualMarket, ...G.powerPlantsDeck]).filter((p) => p <= 30);
+                expect(numbers(G.actualMarket), label).to.deep.equal(low.slice(0, n));
+                expect(low, `${label}: ascending`).to.deep.equal([...low].sort((a, b) => a - b));
+                const deckNumbers = numbers(G.powerPlantsDeck);
+                const lowInDeck = low.length - n;
+                const middle = deckNumbers.slice(
+                    lowInDeck,
+                    lowInDeck + deckNumbers.filter((p) => (p > 30 && p <= 35) || p == 99).length
+                );
+                expect(middle, label).to.include(99);
+                expect(
+                    middle.every((p) => (p > 30 && p <= 35) || p == 99),
+                    label
+                ).to.be.true;
+                expect(
+                    deckNumbers.slice(lowInDeck + middle.length).every((p) => p > 35),
+                    label
+                ).to.be.true;
+            }
+        }
+    });
+
+    it('prepares Bremen: the note plants boxed and no further removal', () => {
+        for (const deck of ['set1', 'set2'] as const) {
+            for (const n of players) {
+                const G = game(deck, 'Bremen', n);
+                expect(inGame(G).length, `${deck} ${n}p`).to.equal(42 - (n <= 4 ? 11 : 9));
+                expect(hasPlug(G.powerPlantsDeck[0]), `${deck} ${n}p`).to.be.true;
+            }
+        }
+    });
+
+    it('prepares Manhattan: plug cards boxed, 8 to the market, any left on top, no Step 3 card', () => {
+        // In game: the deck less the 2–3P plants and the boxed plug cards (7 for Set 1, 4 for Set 2).
+        const expected = { set1: [32, 32, 35, 35, 35], set2: [35, 35, 38, 38, 38] };
+        for (const deck of ['set1', 'set2'] as const) {
+            for (const n of players) {
+                const label = `${deck} ${n}p`;
+                const G = game(deck, 'Manhattan', n);
+                expect(
+                    G.powerPlantsDeck.some((p) => p.type == PowerPlantType.Step3),
+                    label
+                ).to.be.false;
+                expect(inGame(G).length, label).to.equal(expected[deck][n - 2]);
+                expect([...G.actualMarket, ...G.futureMarket].every(hasPlug), label).to.be.true;
+                const plugOnTop = !(deck == 'set1' && n <= 3);
+                expect(hasPlug(G.powerPlantsDeck[0]), label).to.equal(plugOnTop);
+                expect(G.powerPlantsDeck.slice(1).some(hasPlug), label).to.be.false;
+            }
+        }
+    });
 });

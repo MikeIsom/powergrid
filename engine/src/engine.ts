@@ -2337,16 +2337,28 @@ export function addPowerPlant(G: GameState): void {
             // phase. Shuffle the stack, put the card back under it, and carry on with
             // this phase by drawing a replacement (maps-middle-east-south-africa.pdf p.2).
             if (G.map.name == 'Middle East' && G.step == 1) {
-                G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
-                G.powerPlantsDeck.push(powerPlant);
-                if (!G.middleEastStep2Pending) {
-                    G.middleEastStep2Pending = true;
-                    G.log.push({ type: 'event', event: 'Step 2 will begin next phase.' });
-                    if (G.powerPlantsDeck.length > 1) {
-                        addPowerPlant(G);
+                if (rulesApply(G.options, 'middleEastStepTwoNextPhase')) {
+                    G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
+                    G.powerPlantsDeck.push(powerPlant);
+                    if (!G.middleEastStep2Pending) {
+                        G.middleEastStep2Pending = true;
+                        G.log.push({ type: 'event', event: 'Step 2 will begin next phase.' });
+                        if (G.powerPlantsDeck.length > 1) {
+                            addPowerPlant(G);
+                        }
                     }
+                    return;
                 }
-                return;
+                // Before: outside an auction Step 2 began at once. In an auction the card
+                // waited in the future market until the end of the phase (toResourcesPhase).
+                if (G.phase != Phase.Auction) {
+                    const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
+                    market.sort((a, b) => a.number - b.number);
+                    G.actualMarket = market.slice(0, 4);
+                    G.futureMarket = market.slice(4);
+                    enterStepTwoMiddleEastAtOnce(G);
+                    return;
+                }
             }
 
             // Step 3 before Step 2: first make the Step 2 changes, then continue with
@@ -2713,6 +2725,28 @@ function enterStepTwoMiddleEast(G: GameState) {
     G.plantDiscountActive = plantDiscountActive;
 }
 
+// Middle East before site version 14 (middleEastStepTwoNextPhase): the Step 3 card
+// sits last in the market; put it back under the shuffled stack, draw a replacement
+// and start Step 2 at once, removing the two lowest plants.
+function enterStepTwoMiddleEastAtOnce(G: GameState) {
+    const step3 = G.futureMarket.pop()!;
+    G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
+    G.powerPlantsDeck.push(step3);
+    addPowerPlant(G);
+
+    startStep(G, 2, 'Step 2 will begin next phase, discarding two power plants.');
+    for (let i = 0; i < 2; i++) {
+        const powerPlantDiscarded = G.actualMarket.shift();
+        if (powerPlantDiscarded) {
+            G.log.push({
+                type: 'event',
+                event: `Power Plant ${powerPlantDiscarded.number} discarded to start step 2.`,
+            });
+            addPowerPlant(G);
+        }
+    }
+}
+
 // Australia CO2 tax: when Step 3 begins, the $1 and $2 resource spaces close for
 // the rest of the game and the six cheapest tokens of each resource move to the
 // new $9 and $10 spaces — i.e. the active price scale shifts up by $2. Because
@@ -3029,7 +3063,14 @@ function toResourcesPhase(G: GameState) {
         }
     }
 
-    if (G.futureMarket.find((pp) => pp.number == 99)) {
+    if (
+        G.futureMarket.find((pp) => pp.number == 99) &&
+        G.map.name == 'Middle East' &&
+        G.step == 1 &&
+        !rulesApply(G.options, 'middleEastStepTwoNextPhase')
+    ) {
+        enterStepTwoMiddleEastAtOnce(G);
+    } else if (G.futureMarket.find((pp) => pp.number == 99)) {
         // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
         if (G.step == 1 && rulesApply(G.options, 'stepTwoBeforeStepThree')) {
             enterStepTwo(G, 'Starting Step 2 before Step 3');

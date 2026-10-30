@@ -35,6 +35,8 @@ export const ruleVersions = {
     beneluxFusionEcological: 14,
     // Manhattan: the whole market is buyable from the round after the second depletion (F14).
     manhattanBuyableNextRound: 14,
+    // Middle East: Step 2 begins at the start of the next phase (F13).
+    middleEastStepTwoNextPhase: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

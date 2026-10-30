@@ -219,4 +219,32 @@ describe('Rule versions', () => {
         expect(future(13)).to.equal(0);
         expect(future(14)).to.equal(3);
     });
+
+    it('middleEastStepTwoNextPhase: starts Middle East Step 2 at the next phase from version 14', () => {
+        const stepAfterDraw = (version: number) => {
+            const G = setup(3, { map: 'Middle East', variant: 'recharged', version }, 'versions');
+            G.phase = Phase.Building;
+            G.actualMarket = plants(3, 4, 5, 7);
+            G.futureMarket = plants(8, 9, 10);
+            G.powerPlantsDeck = plants(99, 15, 16, 18, 20, 21);
+            addPowerPlant(G);
+            return G.step;
+        };
+        expect(stepAfterDraw(13)).to.equal(2);
+        expect(stepAfterDraw(14)).to.equal(1);
+    });
+
+    it('middleEastStepTwoNextPhase: keeps an auction-drawn Middle East card in the market before version 14', () => {
+        let G = setup(3, { map: 'Middle East', variant: 'recharged', version: 13 }, 'versions');
+        G.round = 2;
+        G.plantDiscountActive = false;
+        G.actualMarket = plants(3, 4, 5, 7);
+        G.futureMarket = plants(8, 9, 10);
+        G.powerPlantsDeck = plants(99, 15, 16, 18, 20, 21);
+        addPowerPlant(G);
+        expect(G.futureMarket.map((p) => p.number)).to.include(99);
+        G = passPhase(G);
+        expect(G.phase).to.equal(Phase.Resources);
+        expect(G.step).to.equal(2);
+    });
 });

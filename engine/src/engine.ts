@@ -2267,7 +2267,9 @@ export function addPowerPlant(G: GameState): void {
                         }
                     }
                 } else {
-                    break;
+                    // The deck ran out: the too-small plant is still removed, and
+                    // nothing replaces it (base-original-2013.pdf p.5).
+                    return;
                 }
             }
         }

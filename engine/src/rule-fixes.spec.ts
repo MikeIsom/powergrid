@@ -167,4 +167,15 @@ describe('Rule fixes', () => {
         G.players[1].cities = [{ name: start, position: 0 }];
         expect(buildPrices(G, 0).get(start)).to.equal(10);
     });
+
+    it('F8: never adds a too-small plant to the market, even as the last card', () => {
+        const G = setup(3, { map: 'USA', variant: 'original' }, 'f8');
+        G.players[0].cities = G.map.cities.slice(0, 10).map((c) => ({ name: c.name, position: 0 }));
+        G.actualMarket = plants(11, 12, 13);
+        G.futureMarket = plants(14, 15, 16, 17);
+        G.powerPlantsDeck = plants(8);
+        addPowerPlant(G);
+        expect(G.powerPlantsDeck).to.be.empty;
+        expect([...G.actualMarket, ...G.futureMarket].map((p) => p.number)).to.deep.equal([11, 12, 13, 14, 15, 16, 17]);
+    });
 });

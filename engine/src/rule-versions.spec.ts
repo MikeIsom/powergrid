@@ -77,4 +77,18 @@ describe('Rule versions', () => {
         expect(uranium(13)).to.be.above(0);
         expect(uranium(14)).to.equal(0);
     });
+
+    it('badenWurttembergKeepsDrawnPlants: keeps a too-small drawn plant from version 14', () => {
+        const market = (version: number) => {
+            const G = setup(3, { map: 'Baden-Württemberg', variant: 'original', version }, 'versions');
+            G.players[0].cities = G.map.cities.slice(0, 10).map((c) => ({ name: c.name, position: 0 }));
+            G.actualMarket = plants(11, 12, 13);
+            G.futureMarket = plants(14, 15, 16, 17);
+            G.powerPlantsDeck = plants(8, 20);
+            addPowerPlant(G);
+            return G.actualMarket.map((p) => p.number);
+        };
+        expect(market(13)).to.deep.equal([11, 12, 13, 14]);
+        expect(market(14)).to.deep.equal([8, 11, 12, 13]);
+    });
 });

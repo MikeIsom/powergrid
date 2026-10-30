@@ -2289,7 +2289,7 @@ export function addPowerPlant(G: GameState): void {
         if (
             G.options.variant == 'original' &&
             G.map.name != 'China' &&
-            G.map.name != 'Baden-Württemberg' &&
+            !(G.map.name == 'Baden-Württemberg' && rulesApply(G.options, 'badenWurttembergKeepsDrawnPlants')) &&
             G.map.name != 'Russia'
         ) {
             const maxCities = Math.max(...G.players.map((p) => p.cities.length));

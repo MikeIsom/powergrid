@@ -13,6 +13,8 @@ export const ruleVersions = {
     ukIrelandOpenSlotJump: 14,
     // Italy: the uranium stop after plant 39 also applies under Original (F4).
     italyUraniumStopOriginal: 14,
+    // Baden-Wurttemberg: drawn plants at or below a city count are kept (F5).
+    badenWurttembergKeepsDrawnPlants: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

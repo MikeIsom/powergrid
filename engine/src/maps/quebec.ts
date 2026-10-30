@@ -1,7 +1,8 @@
 import { cloneDeep } from 'lodash';
 import { getPowerPlant } from '../engine';
-import { PowerPlant, PowerPlantType } from '../gamestate';
+import { GameOptions, PowerPlant, PowerPlantType } from '../gamestate';
 import { powerPlants } from '../powerPlants';
+import { rulesApply } from '../rule-versions';
 import { shuffle } from '../utils';
 import { GameMap } from './../maps';
 
@@ -206,7 +207,17 @@ export const map: GameMap = {
         ],
     ],
     startingResources: [21, 21, 6, 2],
-    setupDeck(numPlayers: number, variant: string, rng: seedrandom.prng) {
+    setupDeck(
+        numPlayers: number,
+        variant: string,
+        rng: seedrandom.prng,
+        deck?: PowerPlant[],
+        options: GameOptions = {}
+    ) {
+        // Before site version 14, fusion plant 50 also counted as ecological here.
+        const ecological = (pp: PowerPlant) =>
+            pp.type == PowerPlantType.Wind ||
+            (pp.type == PowerPlantType.Nuclear && !rulesApply(options, 'quebecWindOnlyEcological'));
         let powerPlantsDeck = cloneDeep(powerPlants);
         let actualMarket: PowerPlant[];
         let futureMarket: PowerPlant[];
@@ -217,10 +228,8 @@ export const map: GameMap = {
             // keeps "Ecological and Fusion Power Plants" apart; owner's ruling).
             // 13, 18, 22 will be set aside and placed on top of the deck.
             const setAsidePlants = powerPlantsDeck.filter((pp) => [13, 18, 22].includes(pp.number));
-            const otherEcoPlants = powerPlantsDeck.filter(
-                (pp) => pp.type == PowerPlantType.Wind && ![13, 18, 22].includes(pp.number)
-            );
-            const nonEcoPlantsDeck = powerPlantsDeck.filter((pp) => pp.type != PowerPlantType.Wind);
+            const otherEcoPlants = powerPlantsDeck.filter((pp) => ecological(pp) && ![13, 18, 22].includes(pp.number));
+            const nonEcoPlantsDeck = powerPlantsDeck.filter((pp) => !ecological(pp));
 
             // Remove first eight plants for actual and future market.
             powerPlantsDeck = nonEcoPlantsDeck.slice(8);
@@ -259,13 +268,11 @@ export const map: GameMap = {
             const plant13 = powerPlantsDeck.filter((pp) => pp.number == 13);
             const otherInitialEcoPlants = powerPlantsDeck.filter((pp) => pp.number == 18 || pp.number == 22);
             // Ecological plants are the green (wind) plants only, as above.
-            const otherEcoPlants = powerPlantsDeck.filter(
-                (pp) => ![13, 18, 22].includes(pp.number) && pp.type == PowerPlantType.Wind
-            );
+            const otherEcoPlants = powerPlantsDeck.filter((pp) => ![13, 18, 22].includes(pp.number) && ecological(pp));
             let otherPlants1 = powerPlantsDeck.filter(
                 (pp) => pp.type != PowerPlantType.Wind && pp.number >= 11 && pp.number <= 15
             );
-            let otherPlants2 = powerPlantsDeck.filter((pp) => pp.type != PowerPlantType.Wind && pp.number >= 16);
+            let otherPlants2 = powerPlantsDeck.filter((pp) => !ecological(pp) && pp.number >= 16);
             if (numPlayers == 2) {
                 otherPlants1 = shuffle(otherPlants1, rng() + '').slice(1);
                 otherPlants2 = shuffle(otherPlants2, rng() + '').slice(5);

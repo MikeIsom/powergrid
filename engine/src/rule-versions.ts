@@ -37,6 +37,8 @@ export const ruleVersions = {
     manhattanBuyableNextRound: 14,
     // Middle East: Step 2 begins at the start of the next phase (F13).
     middleEastStepTwoNextPhase: 14,
+    // Quebec: only green (wind) plants are ecological, so 50 can be removed in setup (F3).
+    quebecWindOnlyEcological: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

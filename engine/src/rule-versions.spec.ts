@@ -247,4 +247,14 @@ describe('Rule versions', () => {
         expect(G.phase).to.equal(Phase.Resources);
         expect(G.step).to.equal(2);
     });
+
+    it('quebecWindOnlyEcological: lets Quebec setup remove fusion plant 50 from version 14', () => {
+        const removedIn = (version: number) =>
+            [...Array(20).keys()].filter((i) => {
+                const G = setup(2, { map: 'Quebec', variant: 'original', version }, `quebec-${i}`);
+                return ![...G.actualMarket, ...G.futureMarket, ...G.powerPlantsDeck].some((p) => p.number == 50);
+            }).length;
+        expect(removedIn(13)).to.equal(0);
+        expect(removedIn(14)).to.be.above(0);
+    });
 });

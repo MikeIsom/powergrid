@@ -3,6 +3,7 @@ import { availableMoves } from './available-moves';
 import { defaultSetupDeck, reconstructState, setup, stripSecret } from './engine';
 import { GameState, PowerPlant, PowerPlantType } from './gamestate';
 import { plantCatalogue } from './powerPlants';
+import { rulesApply } from './rule-versions';
 import { shuffle } from './utils';
 
 /** Unknown cards come from the published catalogue, never the live draw pile. */
@@ -115,8 +116,11 @@ export function createAnalysisScenario(
     candidates = candidates.filter((p) => !top.some((t) => t.number === p.number));
     const mandatory = (p: PowerPlant) =>
         (name === 'Brazil' && p.type === PowerPlantType.Garbage && p.number > 14) ||
-        // Québec never removes its green (wind) plants; fusion 50 can be removed.
-        (name === 'Quebec' && p.type === PowerPlantType.Wind) ||
+        // Québec never removes its green (wind) plants; fusion 50 can be removed
+        // (before site version 14 it could not).
+        (name === 'Quebec' &&
+            (p.type === PowerPlantType.Wind ||
+                (p.type === PowerPlantType.Nuclear && !rulesApply(s.options, 'quebecWindOnlyEcological')))) ||
         (name === 'Russia' && original && [10, 11].includes(p.number));
     // A plug-back top card is public information in the recharged edition.
     if (

@@ -1091,21 +1091,21 @@ describe('Engine', () => {
         expect(G.powerPlantsDeck.length, 'deck untouched').to.equal(2);
         expect(G.manhattanRecyclePile!.length, 'recycle pile untouched').to.equal(1);
 
-        // Stage 1, empty deck, no recycle pile → second depletion mid-round: the whole
-        // market becomes buyable (sorted), exactly as the Bureaucracy path would do.
+        // Stage 1, empty deck, no recycle pile → second depletion mid-round. The whole
+        // market becomes buyable only from the next round (maps-bremen-manhattan.pdf p.1),
+        // so the future market stays until Bureaucracy collapses it.
         G = base();
         G.actualMarket = mkt(22, 30, 40);
-        G.futureMarket = mkt(25);
+        G.futureMarket = mkt(46);
         G.powerPlantsDeck = [];
         G.manhattanRecyclePile = [];
         G.manhattanDepletion = 1;
         applyManhattanDepletionOnEmptyDeck(G);
         expect(G.manhattanDepletion, 'stage 1 empty deck → second depletion').to.equal(2);
-        expect(G.futureMarket.length, 'no future market once everything is buyable').to.equal(0);
         expect(
-            G.actualMarket.map((p) => p.number),
-            'whole market buyable and sorted'
-        ).to.deep.equal([22, 25, 30, 40]);
+            G.futureMarket.map((p) => p.number),
+            'future market not buyable this round'
+        ).to.deep.equal([46]);
     });
 
     it('should block Manhattan spaces by player count, transitable but unbuildable', () => {

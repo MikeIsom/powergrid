@@ -253,4 +253,34 @@ describe('Rule fixes', () => {
         expect(G.phase).to.equal(Phase.Resources);
         expect(G.step).to.equal(2);
     });
+
+    it('F14: makes the whole Manhattan market buyable only from the round after the second depletion', () => {
+        let G = setup(4, { map: 'Manhattan', variant: 'recharged' }, 'f14');
+        G.round = 5;
+        G.plantDiscountActive = false;
+        G.manhattanDepletion = 1;
+        G.manhattanRecyclePile = [];
+        G.actualMarket = plants(20, 22, 30, 40);
+        G.futureMarket = plants(42, 44, 46);
+        G.powerPlantsDeck = [];
+        addPowerPlant(G); // the replacement after a purchase finds the deck empty
+        expect(G.manhattanDepletion).to.equal(2);
+        expect(
+            G.actualMarket.map((p) => p.number),
+            'this round'
+        ).to.deep.equal([20, 22, 30, 40]);
+        expect(availableMoves(G, G.players[G.currentPlayers[0]])[MoveName.ChoosePowerPlant]).not.to.include(42);
+
+        // Finish the round: Bureaucracy collapses the market and boxes the smallest plant.
+        G = passPhase(G);
+        G = passPhase(G);
+        G = passPhase(G);
+        G = passPhase(G);
+        expect(G.round).to.equal(6);
+        expect(G.futureMarket).to.be.empty;
+        expect(
+            G.actualMarket.map((p) => p.number),
+            'next round'
+        ).to.deep.equal([22, 30, 40, 42, 44, 46]);
+    });
 });

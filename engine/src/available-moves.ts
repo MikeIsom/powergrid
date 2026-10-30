@@ -1,5 +1,6 @@
 import { range } from 'lodash';
 import { minimumPlantBid } from './auction-pricing';
+import { noGarbageInStepOne } from './deck-notes';
 import {
     countHeldPowerPlants,
     GameState,
@@ -447,7 +448,10 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                 }
             }
 
-            if (allowSouth && G.garbageMarket > 0) {
+            // Middle East with Set 2: no garbage in Step 1, only oil for the garbage/oil
+            // hybrids (plants-new-power-plants-set2-map-notes.md).
+            const garbageClosed = G.step == 1 && noGarbageInStepOne(G.options, G.map.name, G.shuffledDeck);
+            if (allowSouth && G.garbageMarket > 0 && !garbageClosed) {
                 const garbagePrices = G.garbagePrices ?? prices[ResourceType.Garbage];
                 let price = garbagePrices[garbagePrices.length - G.garbageMarket];
 
@@ -803,9 +807,12 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
 
                         case PowerPlantType.GarbageOilHybrid: {
                             // Every garbage/oil split the player can afford, garbage first
-                            // (the viewer sorts the chosen resources the same way).
-                            for (let garbage = powerPlant.cost; garbage >= 0; garbage--) {
-                                const oil = powerPlant.cost - garbage;
+                            // (the viewer sorts the chosen resources the same way). In India a
+                            // run with any garbage needs one more token; oil alone burns the
+                            // printed amount (ruling R10).
+                            const extra = G.map.name == 'India' ? 1 : 0;
+                            for (let garbage = powerPlant.cost + extra; garbage >= 0; garbage--) {
+                                const oil = powerPlant.cost + (garbage > 0 ? extra : 0) - garbage;
                                 if (garbage <= player.garbageLeft && oil <= player.oilLeft) {
                                     toUse.push({
                                         powerPlant: powerPlant.number,

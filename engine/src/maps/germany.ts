@@ -324,5 +324,6 @@ export const mapRecharged: GameMap = {
     ],
     layout: 'Landscape',
     mapPosition: [20, 20],
-    mapSpecificRules: 'Stop resupplying uranium after power plant 39 has been bought.',
+    mapSpecificRules:
+        'Stop resupplying uranium after power plant 39 has been bought (with The New Power Plants: 38 in Set 1, 37 in Set 2).',
 };

@@ -35,6 +35,9 @@ export type MapName =
     | 'Bremen'
     | 'Manhattan';
 export type Variant = 'original' | 'recharged';
+export type PlantDeck = 'standard' | 'set1' | 'set2' | 'shuffled' | 'random';
+// The decks a card can come from.
+export type CardDeck = 'standard' | 'set1' | 'set2';
 
 export interface GameOptions {
     fastBid?: boolean;
@@ -57,6 +60,13 @@ export interface GameOptions {
     // alternatePowerPlants in powerPlants.ts) instead of the standard one. Only
     // honoured on the maps in ALTERNATE_DECK_MAPS; ignored everywhere else.
     alternatePowerPlants?: boolean;
+    // The power plant deck: the standard deck, or The New Power Plants Set 1 or Set 2
+    // with 2F-Spiele's map notes (deck-notes.ts). Recharged only for now. Stored only
+    // when it is not the standard deck. alternatePowerPlants still means Set 2 on
+    // Europe and North America.
+    plantDeck?: PlantDeck;
+    // Set by setup when plantDeck was 'random'; plantDeck then holds the deck picked.
+    randomPlantDeck?: boolean;
     // Replaying an old game only: the site engine version it was played under
     // (game.version in a boardgamers.space export). Rule changes newer than this
     // version are not applied (see rule-versions.ts). New games never set it.
@@ -91,6 +101,13 @@ export interface PowerPlant {
     cost: number;
     citiesPowered: number;
     storage?: number;
+    // A plug on the card's back: the weak plants used for the opening market and
+    // the "next card is weak" hint (standard and Set 2: 03–15, Set 1: 01–16).
+    plug?: boolean;
+    // Printed with a "+" after the number (Set 1: 46+, 50+, 52+, 54+, 57+, 60+). Display only.
+    plus?: boolean;
+    // The deck the card comes from, in a shuffled deck only.
+    origin?: CardDeck;
 }
 
 export interface CityPosition {
@@ -254,12 +271,18 @@ export interface GameState {
     minimunBid: number;
     plantDiscountActive: boolean;
     discountBonusPlayer?: number; // Manhattan: id of the player who bought the discounted plant and may purchase one more this phase.
+    // A shuffled deck: the deck each plant number's card was picked from.
+    shuffledDeck?: Record<number, CardDeck>;
+    // Plants put on top of the stack at the start of Step 2, top first (map notes of the
+    // new decks, e.g. Spain & Portugal). Undefined once used and in every other game.
+    stepTwoTopPlants?: PowerPlant[];
     // Middle East: the first Step 3 card was drawn; Step 2 begins at the start of the next phase.
     middleEastStep2Pending?: boolean;
     pendingMarketRefill?: boolean; // A purchase is owed its replacement plant. Set in endAuction, consumed by whichever path finishes the purchase (#67).
     discardSmallestPlant: boolean; // For Benelux map, there are times when we remove the smallest plant.
     nextCardWeak: boolean;
     cardsLeft: number;
+    // The uranium stop plant was bought (39 in the standard deck; see uraniumStopPlant).
     card39Bought: boolean;
     knownPowerPlantDeck: PowerPlant[];
     knownPowerPlantDeckStep3: PowerPlant[];
@@ -294,6 +317,23 @@ export interface GameState {
 // deck setup), so the type check alone identifies them.
 export function isUraniumMine(G: GameState, plant: PowerPlant): boolean {
     return G.map.name === 'Australia' && plant.type === PowerPlantType.Uranium;
+}
+
+// The number printed on the card. Plant numbers are identities and may be fractional
+// to keep two cards with the same printed number apart (25.1 sorts just above 25).
+export function faceValue(plant: PowerPlant): number {
+    return Math.floor(plant.number);
+}
+
+// How a plant's number is shown: its face value, with the printed "+" if any.
+export function plantLabel(plant: PowerPlant | undefined): string {
+    return plant ? `${faceValue(plant)}${plant.plus ? '+' : ''}` : String(plant);
+}
+
+// States saved before cards carried the plug flag hold only standard-deck cards,
+// whose plug cards are exactly 03–15.
+export function hasPlug(plant: PowerPlant): boolean {
+    return plant.plug ?? faceValue(plant) <= 15;
 }
 
 // Ecological plants need no fuel: the green wind plants and the blue fusion plant

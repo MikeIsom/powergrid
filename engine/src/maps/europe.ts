@@ -1,7 +1,7 @@
 // by John and Cici
 import { cloneDeep } from 'lodash';
 import seedrandom from 'seedrandom';
-import { GameOptions, PowerPlant, PowerPlantType } from '../gamestate';
+import { GameOptions, hasPlug, PowerPlant, PowerPlantType } from '../gamestate';
 import { rulesApply } from '../rule-versions';
 import { shuffle } from '../utils';
 import { GameMap } from './../maps';
@@ -357,11 +357,10 @@ export const map: GameMap = {
     // Total cubes in the game (used cubes return here; refill draws from here).
     startingSupply: [24, 24, 24, 12],
     // Europe market setup (official rules): the opening market is drawn ONLY from the
-    // plug-back / Set 2 cards. The engine ships one combined deck, so we follow the
-    // established convention that the 13 lowest plants (numbers 3–15) are the "plug"
-    // pool — the same band the default Recharged setup treats separately. Shuffle that
-    // pool, draw 9, and place the 4 lowest in the current market and the next 5 in the
-    // future market. Everything >= 16 is the "socket" pool.
+    // plug-back / Set 2 cards. The plug pool is the cards with a plug on the back
+    // (03–15 in the standard deck and Set 2, 01–16 in Set 1). Shuffle that pool, draw 9,
+    // and place the 4 lowest in the current market and the next 5 in the future
+    // market. The other cards are the "socket" pool.
     //
     // Then reduce the draw deck by player count, split plug vs socket per the Recharged
     // rulebook table:
@@ -371,7 +370,7 @@ export const map: GameMap = {
     // The 4 leftover plug cards (13 drawn down to 9 in the market) cover the plug removals.
     //
     // Finally, per the rules the draw stack must NOT have a plug card on top: if the top
-    // is <= 15, swap a socket card up. The Step 3 card is buried at the bottom.
+    // card has a plug, swap a socket card up. The Step 3 card is buried at the bottom.
     //
     // The Step 2 trigger for Europe is handled in engine.ts (special branch): it
     // removes the lowest plant from the current market once, then re-sorts the
@@ -388,9 +387,11 @@ export const map: GameMap = {
         const step3Index = powerPlantsDeck.findIndex((p) => p.type === PowerPlantType.Step3);
         const step3 = powerPlantsDeck.splice(step3Index, 1)[0];
 
-        // powerPlants is sorted by number, so the first 13 cards are the plug pool (3–15).
-        const plugPool = shuffle(powerPlantsDeck.splice(0, 13), rng() + '');
-        const socketPool = shuffle(powerPlantsDeck, rng() + ''); // the remaining >= 16 cards
+        const plugPool = shuffle(powerPlantsDeck.filter(hasPlug), rng() + '');
+        const socketPool = shuffle(
+            powerPlantsDeck.filter((p) => !hasPlug(p)),
+            rng() + ''
+        );
 
         const initialPlants = plugPool.splice(0, 9).sort((a, b) => a.number - b.number);
         const actualMarket = initialPlants.slice(0, 4);
@@ -424,10 +425,10 @@ export const map: GameMap = {
         const remainingPlug = plugPool.slice(plugToRemove);
         const remainingSocket = socketPool.slice(socketToRemove + plugShortfall);
 
-        // Build the draw stack — rule: never leave a plug card (<= 15) on top.
+        // Build the draw stack — rule: never leave a plug card on top.
         const deck = shuffle(remainingPlug.concat(remainingSocket), rng() + '');
-        if (deck.length > 0 && deck[0].number <= 15) {
-            const socketIndex = deck.findIndex((p) => p.number > 15);
+        if (deck.length > 0 && hasPlug(deck[0])) {
+            const socketIndex = deck.findIndex((p) => !hasPlug(p));
             if (socketIndex > 0) {
                 [deck[0], deck[socketIndex]] = [deck[socketIndex], deck[0]];
             }

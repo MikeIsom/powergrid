@@ -119,4 +119,19 @@ describe('Rule versions', () => {
         expect(market(13)).to.deep.equal([8, 11, 12, 13]);
         expect(market(14)).to.deep.equal([11, 12, 13, 14]);
     });
+
+    it('stepTwoBeforeStepThree: makes the Step 2 changes first from version 14', () => {
+        const events = (version: number) => {
+            const G = setup(4, { map: 'USA', variant: 'recharged', version }, 'versions');
+            G.phase = Phase.Bureaucracy;
+            G.actualMarket = plants(10, 11, 12, 13);
+            G.futureMarket = plants(14, 15, 16);
+            G.powerPlantsDeck = plants(99, 20, 30, 40);
+            addPowerPlant(G);
+            return G.log.map((l) => (l.type == 'event' ? l.event : ''));
+        };
+        expect(events(13)).not.to.include('Starting Step 2 before Step 3, Power Plant 10 discarded.');
+        expect(events(13)).to.include('Step 3 will begin next phase, Power Plant 10 discarded.');
+        expect(events(14)).to.include('Starting Step 2 before Step 3, Power Plant 10 discarded.');
+    });
 });

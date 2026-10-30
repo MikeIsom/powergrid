@@ -2350,7 +2350,12 @@ export function addPowerPlant(G: GameState): void {
             // Step 3's (base-recharged.pdf p.8; both variants, every map). A card drawn
             // in an auction waits for the end of the phase (toResourcesPhase).
             if (G.step == 1 && G.phase != Phase.Auction) {
-                enterStepTwo(G, 'Starting Step 2 before Step 3');
+                if (rulesApply(G.options, 'stepTwoBeforeStepThree')) {
+                    enterStepTwo(G, 'Starting Step 2 before Step 3');
+                } else if (G.map.name == 'UK & Ireland') {
+                    // Before: UK & Ireland only marked Step 2, with no removal.
+                    startStep(G, 2, 'Starting Step 2 (Step 3 card drawn before Step 2 threshold).');
+                }
             }
 
             if (G.map.name == 'China' && !G.powerPlantDeckAfterStep3) {
@@ -3008,7 +3013,7 @@ function toResourcesPhase(G: GameState) {
 
     if (G.futureMarket.find((pp) => pp.number == 99)) {
         // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
-        if (G.step == 1) {
+        if (G.step == 1 && rulesApply(G.options, 'stepTwoBeforeStepThree')) {
             enterStepTwo(G, 'Starting Step 2 before Step 3');
         }
         const powerPlantDiscarded = G.actualMarket.shift();

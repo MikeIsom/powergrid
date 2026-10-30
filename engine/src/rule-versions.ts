@@ -19,6 +19,8 @@ export const ruleVersions = {
     russiaKeepsDrawnPlants: 14,
     // Original: a too-small plant is not added when the deck runs out (F8).
     noTooSmallLastCard: 14,
+    // The Step 2 changes come first when Step 3 begins during Step 1 (F6).
+    stepTwoBeforeStepThree: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

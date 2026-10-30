@@ -1321,7 +1321,10 @@ export function move(
                         // maps-france-italy.pdf p.2, under both variants (ruling R5).
                         const uraniumPhasedOut =
                             G.card39Bought &&
-                            (G.map.name == 'Italy' || (G.map.name == 'Germany' && G.options.variant == 'recharged'));
+                            ((G.map.name == 'Italy' &&
+                                (G.options.variant == 'recharged' ||
+                                    rulesApply(G.options, 'italyUraniumStopOriginal'))) ||
+                                (G.map.name == 'Germany' && G.options.variant == 'recharged'));
                         let uraniumResupplyValue = 0;
                         if (!uraniumPhasedOut) {
                             uraniumResupplyValue = Math.min(

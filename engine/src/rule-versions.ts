@@ -11,6 +11,8 @@ export const ruleVersions = {
     franceStartingGarbage: 14,
     // UK & Ireland: the island jump may use any city with an open slot (F2).
     ukIrelandOpenSlotJump: 14,
+    // Italy: the uranium stop after plant 39 also applies under Original (F4).
+    italyUraniumStopOriginal: 14,
 } as const;
 
 export type RuleChange = keyof typeof ruleVersions;

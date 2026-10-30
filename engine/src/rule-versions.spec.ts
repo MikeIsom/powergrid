@@ -1,10 +1,23 @@
 import { expect } from 'chai';
 import 'mocha';
 import { availableMoves } from './available-moves';
-import { addPowerPlant, getPowerPlant, setup } from './engine';
-import { GameOptions, Phase } from './gamestate';
+import { addPowerPlant, getPowerPlant, move, setup } from './engine';
+import { GameOptions, GameState, Phase } from './gamestate';
 import { MoveName } from './move';
 import { rulesApply } from './rule-versions';
+
+const plants = (...numbers: number[]) => numbers.map((n) => getPowerPlant(n));
+
+// Every current player passes until the phase changes.
+function passPhase(G: GameState): GameState {
+    const phase = G.phase;
+    while (G.phase == phase && G.currentPlayers.length > 0) {
+        const p = G.currentPlayers[0];
+        G.players[p].availableMoves = availableMoves(G, G.players[p]);
+        G = move(G, { name: MoveName.Pass, data: true }, p);
+    }
+    return G;
+}
 
 describe('Rule versions', () => {
     it('stores the version option only when it is set', () => {
@@ -50,5 +63,18 @@ describe('Rule versions', () => {
         };
         expect(jumpPrice(13)).to.be.undefined;
         expect(jumpPrice(14)).to.equal(35);
+    });
+    it('italyUraniumStopOriginal: stops Italy Original uranium after plant 39 from version 14', () => {
+        const uranium = (version: number) => {
+            let G = setup(3, { map: 'Italy', variant: 'original', version }, 'versions');
+            G.uraniumMarket = 0;
+            G.card39Bought = true;
+            G.phase = Phase.Bureaucracy;
+            G.currentPlayers = [...G.playerOrder];
+            G = passPhase(G);
+            return G.uraniumMarket;
+        };
+        expect(uranium(13)).to.be.above(0);
+        expect(uranium(14)).to.equal(0);
     });
 });

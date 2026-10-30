@@ -13,6 +13,7 @@ import {
 import { GameMap } from './maps';
 import { MoveName } from './move';
 import prices from './prices';
+import { rulesApply } from './rule-versions';
 import { minBy } from './utils';
 
 export interface AvailableMoves {
@@ -455,7 +456,7 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                 if (G.map.name == 'Central Europe') {
                     const wienCity = player.cities.filter((c) => c.name == 'Wien');
                     if (wienCity?.length > 0) {
-                        price = Math.max(1, price - 1);
+                        price = rulesApply(G.options, 'wienDiscountFloor') ? Math.max(1, price - 1) : price - 1;
                     }
                 }
 
@@ -566,7 +567,12 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     // base-recharged.pdf p.5 ("any empty city") and base-original-2013.pdf p.4
                     // ("any city (not already chosen by another player)"). Japan's starting
                     // cities have two first-house spaces (maps-russia-japan.pdf p.2).
-                    if (player.cities.length == 0 && othersCount > 0 && !japanStartingCities.has(city.name)) {
+                    if (
+                        player.cities.length == 0 &&
+                        othersCount > 0 &&
+                        !japanStartingCities.has(city.name) &&
+                        rulesApply(G.options, 'firstHouseInEmptyCity')
+                    ) {
                         city.price = 9999;
                         return;
                     }
@@ -612,7 +618,13 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                                 .filter((i): i is string => !!i)
                         );
                         if (!playerIslands.has(cityData.island)) {
-                            city.price = G.map.crossIslandSurcharge;
+                            if (rulesApply(G.options, 'ukIrelandOpenSlotJump')) {
+                                city.price = G.map.crossIslandSurcharge;
+                            } else {
+                                // Before: only empty cities, at 10 + the surcharge.
+                                city.price = othersCount > 0 ? 9999 : 10 + G.map.crossIslandSurcharge;
+                                return;
+                            }
                         }
                     }
 

@@ -1,7 +1,8 @@
 // by John and Cici
 import { cloneDeep } from 'lodash';
 import seedrandom from 'seedrandom';
-import { PowerPlant, PowerPlantType } from '../gamestate';
+import { GameOptions, PowerPlant, PowerPlantType } from '../gamestate';
+import { rulesApply } from '../rule-versions';
 import { shuffle } from '../utils';
 import { GameMap } from './../maps';
 import { powerPlants } from './../powerPlants';
@@ -375,7 +376,13 @@ export const map: GameMap = {
     // The Step 2 trigger for Europe is handled in engine.ts (special branch): it
     // removes the lowest plant from the current market once, then re-sorts the
     // remaining 8 plants into 4 actual + 4 future without drawing from the deck.
-    setupDeck(numPlayers: number, variant: string, rng: seedrandom.prng, catalogue?: PowerPlant[]) {
+    setupDeck(
+        numPlayers: number,
+        variant: string,
+        rng: seedrandom.prng,
+        catalogue?: PowerPlant[],
+        options: GameOptions = {}
+    ) {
         const powerPlantsDeck = cloneDeep(catalogue ?? powerPlants);
 
         const step3Index = powerPlantsDeck.findIndex((p) => p.type === PowerPlantType.Step3);
@@ -389,7 +396,7 @@ export const map: GameMap = {
         const actualMarket = initialPlants.slice(0, 4);
         const futureMarket = initialPlants.slice(4); // 5 plants; plugPool keeps the 4 undrawn cards
 
-        if (variant == 'original') {
+        if (variant == 'original' && rulesApply(options, 'europeOriginalRemovals')) {
             // The booklet's market and stack (maps-europe-north-america.pdf p.2: no plug
             // card set on top, Step 3 at the bottom) with the Original removal counts,
             // face down from the whole stack (base-original-2013.pdf p.7).

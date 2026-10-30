@@ -4,7 +4,7 @@
 //
 //   npx ts-node --transpile-only scripts/stress.ts [--games 200] [--cap 3000]
 //       [--variant original,recharged] [--maps USA,Germany] [--players 2,3,4,5,6]
-//       [--workers 8] [--json out.json]
+//       [--deck standard,set1,set2] [--workers 8] [--json out.json]
 //
 // A game is "stuck" when it hasn't ended and nobody has a move, and "capped" when it
 // hits the move cap first.
@@ -13,12 +13,13 @@ import { writeFileSync } from 'fs';
 import seedrandom from 'seedrandom';
 import { availableMoves } from '../src/available-moves';
 import { ended, move, setup } from '../src/engine';
-import { GameState, MapName, Phase, Variant } from '../src/gamestate';
+import { GameState, MapName, Phase, PlantDeck, Variant } from '../src/gamestate';
 import { maps, mapsRecharged } from '../src/maps';
 import { Move, MoveName } from '../src/move';
 
 interface Job {
     variant: Variant;
+    deck: PlantDeck;
     map: MapName;
     players: number;
     games: number;
@@ -79,9 +80,16 @@ function randomMove(G: GameState, rng: seedrandom.prng): { player: number; move:
     return { player, move: { name, data: pick(rng, options) } as Move };
 }
 
-function playGame(job: Job, seed: string): { G: GameState; failure?: Failure } {
+function playGame(job: Job, seed: string): { G?: GameState; failure?: Failure } {
     const rng = seedrandom(seed + '-moves');
-    let G = setup(job.players, { map: job.map, variant: job.variant }, seed);
+    let G: GameState;
+    try {
+        G = setup(job.players, { map: job.map, variant: job.variant, plantDeck: job.deck }, seed);
+    } catch (err) {
+        return {
+            failure: { seed, kind: 'error', moves: 0, round: 0, phase: Phase.Auction, message: (err as Error).message },
+        };
+    }
     let moves = 0;
     const fail = (kind: Failure['kind'], message?: string) => ({
         G,
@@ -114,10 +122,11 @@ function playGame(job: Job, seed: string): { G: GameState; failure?: Failure } {
 function runJob(job: Job): JobResult {
     const result: JobResult = { ...job, ended: 0, totalMoves: 0, totalRounds: 0, failures: [] };
     for (let i = 0; i < job.games; i++) {
-        const seed = `stress-${job.variant}-${job.map}-${job.players}p-${i}`;
+        const deck = job.deck == 'standard' ? '' : `${job.deck}-`;
+        const seed = `stress-${deck}${job.variant}-${job.map}-${job.players}p-${i}`;
         const { G, failure } = playGame(job, seed);
-        if (failure) {
-            result.failures.push(failure);
+        if (failure || !G) {
+            result.failures.push(failure!);
         } else {
             result.ended++;
             result.totalMoves += G.log.length;
@@ -140,13 +149,16 @@ function main() {
     const cap = Number(a.cap ?? 3000);
     const variants = (a.variant ?? 'original,recharged').split(',') as Variant[];
     const players = (a.players ?? '2,3,4,5,6').split(',').map(Number);
+    const decks = (a.deck ?? 'standard').split(',') as PlantDeck[];
     const workers = Number(a.workers ?? 8);
 
     const jobs: Job[] = [];
-    for (const variant of variants) {
-        const mapNames = (variant == 'original' ? maps : mapsRecharged).map((m) => m.name as MapName);
-        for (const map of a.maps ? mapNames.filter((m) => a.maps.split(',').includes(m)) : mapNames) {
-            for (const n of players) jobs.push({ variant, map, players: n, games, cap });
+    for (const deck of decks) {
+        for (const variant of variants) {
+            const mapNames = (variant == 'original' ? maps : mapsRecharged).map((m) => m.name as MapName);
+            for (const map of a.maps ? mapNames.filter((m) => a.maps.split(',').includes(m)) : mapNames) {
+                for (const n of players) jobs.push({ variant, deck, map, players: n, games, cap });
+            }
         }
     }
 
@@ -166,7 +178,7 @@ function main() {
         child.on('message', (r: JobResult) => {
             results.push(r);
             const bad = r.failures.length ? `  FAILURES ${r.failures.length}` : '';
-            console.error(`[${results.length}/${jobs.length}] ${r.variant} ${r.map} ${r.players}p${bad}`);
+            console.error(`[${results.length}/${jobs.length}] ${r.deck} ${r.variant} ${r.map} ${r.players}p${bad}`);
             sendNext();
         });
         child.on('exit', () => {
@@ -178,14 +190,17 @@ function main() {
 }
 
 function report(results: JobResult[], ms: number, json?: string) {
-    results.sort((x, y) => (x.variant + x.map + x.players).localeCompare(y.variant + y.map + y.players));
+    results.sort((x, y) =>
+        (x.deck + x.variant + x.map + x.players).localeCompare(y.deck + y.variant + y.map + y.players)
+    );
     const count = (r: JobResult, kind: Failure['kind']) => r.failures.filter((f) => f.kind == kind).length;
     const total = results.reduce((s, r) => s + r.games, 0);
 
-    console.log('variant\tmap\tplayers\tgames\tended\terrors\tstuck\tcapped\tavgLog\tavgRounds');
+    console.log('deck\tvariant\tmap\tplayers\tgames\tended\terrors\tstuck\tcapped\tavgLog\tavgRounds');
     for (const r of results) {
         console.log(
             [
+                r.deck,
                 r.variant,
                 r.map,
                 r.players,

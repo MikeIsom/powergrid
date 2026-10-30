@@ -3,7 +3,7 @@ import 'mocha';
 import { availableMoves } from './available-moves';
 import { deckNote } from './deck-notes';
 import { calculateMaxCitiesPowered, move, setup, updatePlayerCapacity } from './engine';
-import { GameState, hasPlug, MapName, Phase, PowerPlant, PowerPlantType, ResourceType } from './gamestate';
+import { GameState, hasPlug, MapName, Phase, plantLabel, PowerPlant, PowerPlantType, ResourceType } from './gamestate';
 import { MoveName } from './move';
 import { alternatePowerPlants, plantCatalogue, powerPlants, set1PowerPlants } from './powerPlants';
 
@@ -519,5 +519,11 @@ describe('New power plant decks', () => {
         expect(target(0, 3), 'oil alone').to.equal(5);
         expect(target(2, 2), 'two garbage and two oil').to.equal(5);
         expect(target(1, 2), 'three tokens with garbage are one short').to.equal(0);
+    });
+
+    it('labels plants by their printed number, with the printed plus', () => {
+        expect(plantLabel({ number: 25.1, type: PowerPlantType.Uranium, cost: 1, citiesPowered: 4 })).to.equal('25');
+        expect(plantLabel(set1PowerPlants.find((p) => p.number == 46))).to.equal('46+');
+        expect(plantLabel(powerPlants.find((p) => p.number == 46))).to.equal('46');
     });
 });

@@ -639,9 +639,9 @@
         <div v-if="G && soleBuyerPlant" class="modal visible">
             <div class="modal-content">
                 <span class="close" @click="soleBuyerPlant = null">&times;</span>
-                <div class="modal-title">Buy Power Plant {{ soleBuyerPlant.number }}</div>
+                <div class="modal-title">Buy Power Plant {{ plantLabel(soleBuyerPlant) }}</div>
                 <div class="confirm-message">
-                    You are the only player who can still buy. Buy Power Plant {{ soleBuyerPlant.number }} for ${{
+                    You are the only player who can still buy. Buy Power Plant {{ plantLabel(soleBuyerPlant) }} for ${{
                         soleBuyerPrice()
                     }}?
                 </div>
@@ -950,8 +950,10 @@ import Resources from './boards/Resources.vue';
 import ResupplyBadge from './boards/ResupplyBadge.vue';
 import { LogMove } from 'powergrid-engine/src/log';
 import {
+    faceValue,
     isUraniumMine,
     Phase,
+    plantLabel as printedNumber,
     playerTimeUsed,
     PowerPlant,
     PowerPlantType,
@@ -1923,6 +1925,11 @@ export default class Game extends Vue {
     }
 
     // Minimum price the sole buyer pays: the plant number, or $1 for the recharged
+    // How a plant's number is shown: 25.1 as 25, Set 1's big plants with their "+".
+    plantLabel(plant: PowerPlant): string {
+        return printedNumber(plant);
+    }
+
     // discount plant (the cheapest in the market) — mirrors the engine's minimum bid.
     soleBuyerPrice(): number {
         if (!this.soleBuyerPlant) return 0;
@@ -1930,7 +1937,7 @@ export default class Game extends Vue {
             this.G!.options.variant === 'recharged' &&
             this.G!.plantDiscountActive &&
             this.G!.actualMarket[0]?.number === this.soleBuyerPlant.number;
-        return discounted ? 1 : this.soleBuyerPlant.number;
+        return discounted ? 1 : faceValue(this.soleBuyerPlant);
     }
 
     confirmSoleBuyerPurchase() {

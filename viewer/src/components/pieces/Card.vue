@@ -25,8 +25,8 @@
             <text text-anchor="middle" x="6" y="6" style="font-size: 12px" fill="black">$</text>
         </g>
         <g transform="translate(30, 10)">
-            <text text-anchor="middle" x="1" y="1" fill="gray">{{ powerPlant.number }}</text>
-            <text text-anchor="middle" fill="white">{{ powerPlant.number }}</text>
+            <text text-anchor="middle" x="1" y="1" fill="gray">{{ label }}</text>
+            <text text-anchor="middle" fill="white">{{ label }}</text>
         </g>
 
         <g :id="elId" :class="['piece']" transform="translate(40, 20) scale(0.035)">
@@ -92,7 +92,7 @@
 </template>
 <script lang="ts">
 import { PieceType } from './../../types/ui-data';
-import { PowerPlant, PowerPlantType } from 'powergrid-engine/src/gamestate';
+import { plantLabel, PowerPlant, PowerPlantType } from 'powergrid-engine/src/gamestate';
 import { Component, Mixins, Prop } from 'vue-property-decorator';
 import Piece from './Piece.vue';
 
@@ -116,6 +116,11 @@ export default class Card extends Mixins(Piece) {
 
     @Prop()
     activationState?: 'used' | 'unavailable' | 'ready' | 'idle';
+
+    // The printed number: 25.1 shows as 25, and Set 1's big plants carry their "+".
+    get label() {
+        return plantLabel(this.powerPlant);
+    }
 
     get activationLabel() {
         return this.activationState === 'used' ? 'Activated' :

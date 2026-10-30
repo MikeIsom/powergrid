@@ -617,7 +617,7 @@ function prepareDeck(
 // instead. A regional plant has a plug on the back if its deck's cards with that number
 // do (Norway's 07 and Sweden South's 10 join the plug cards). One whose number is still
 // in the deck becomes number + 0.1, as Sweden North's 25 with Set 1 (ruling R11).
-function withRegionalPlants(
+export function withRegionalPlants(
     catalogue: PowerPlant[],
     map: GameMap,
     regions: Set<string>,

@@ -182,7 +182,9 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     if (G.chosenPowerPlant == undefined) {
                         let canBid = G.actualMarket.filter((p) => player.money >= minimumPlantBid(G, p));
 
-                        // No nuclear plants for Portugal
+                        // No nuclear plants for players whose cities are all in Portugal
+                        // (maps-brazil-spain-portugal.pdf p.2). By the owner's ruling a player
+                        // with no cities may not buy them either: they need a city in Spain.
                         if (G.map.name == 'Spain & Portugal') {
                             const playerCities = player.cities.map(
                                 (c) => G.map.cities.find((c_) => c_.name == c.name)!

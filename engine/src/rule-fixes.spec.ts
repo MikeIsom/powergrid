@@ -375,4 +375,31 @@ describe('Rule fixes', () => {
             }
         }
     });
+
+    it('Spain & Portugal: needs a city in Spain to buy nuclear plants', () => {
+        for (const variant of variants) {
+            const G = setup(6, { map: 'Spain & Portugal', variant }, 'spain-nuclear');
+            const portugal = G.map.cities.find((c) => c.region == 'yellow')!;
+            const spain = G.map.cities.find((c) => c.region != 'yellow')!;
+            G.actualMarket = plants(11, 12, 13, 14);
+            const player = G.players[G.currentPlayers[0]];
+            const choices = () => availableMoves(G, player)[MoveName.ChoosePowerPlant];
+
+            expect(choices(), `${variant}, no cities, round 1`).not.to.include(11);
+            G.round = 2;
+            expect(choices(), `${variant}, no cities`).not.to.include(11);
+            player.cities = [{ name: portugal.name, position: 0 }];
+            expect(choices(), `${variant}, only Portugal`).not.to.include(11);
+            player.cities.push({ name: spain.name, position: 0 });
+            expect(choices(), `${variant}, a city in Spain`).to.include(11);
+
+            // Bidding on a nuclear plant someone else put up.
+            G.chosenPowerPlant = getPowerPlant(11);
+            G.minimunBid = 11;
+            G.currentBid = 11;
+            expect(availableMoves(G, player)[MoveName.Bid], `${variant}, a city in Spain, bid`).not.to.be.undefined;
+            player.cities = [];
+            expect(availableMoves(G, player)[MoveName.Bid], `${variant}, no cities, bid`).to.be.undefined;
+        }
+    });
 });

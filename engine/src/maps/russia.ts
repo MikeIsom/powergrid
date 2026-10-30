@@ -302,9 +302,10 @@ export const map: GameMap = {
             'deck. Removal by player count (higher plants only): 2 players remove ' +
             '6, 3 players remove 8, 4 players remove 4.',
         original:
-            'plants 6 and 14 are removed from the game; the ' +
-            'market is 3, 4, 5 / 7, 8, 9. Plant 13 goes on top of the deck, then ' +
-            'five shuffled cards (plants 10, 11 and the top three of the deck), ' +
-            'then the rest, with the Step 3 card on the bottom.',
+            'plants 6 and 14 are removed from the game; the market is 3, 4, 5 / 7, 8, 9. ' +
+            'Plants 10, 11 and 13 are set aside, the rest is shuffled and the player-count ' +
+            'removal applied (8 plants with 2 or 3 players, 4 with 4). Then plant 13 goes on ' +
+            'top of the deck, followed by five shuffled cards (plants 10, 11 and the top three ' +
+            'of the deck), then the rest, with the Step 3 card on the bottom.',
     },
 };

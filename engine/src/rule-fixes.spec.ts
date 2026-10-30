@@ -75,4 +75,24 @@ describe('Rule fixes', () => {
             expect(G.powerPlantsDeck[G.powerPlantsDeck.length - 1].number, variant).to.equal(50);
         }
     });
+
+    it('F4: stops Italy uranium resupply after plant 39 under both variants', () => {
+        const uraniumAfterBureaucracy = (map: 'Italy' | 'Germany', variant: Variant, card39Bought: boolean) => {
+            let G = setup(3, { map, variant }, 'f4');
+            G.uraniumMarket = 0;
+            G.uraniumSupply = 12;
+            G.card39Bought = card39Bought;
+            G.phase = Phase.Bureaucracy;
+            G.currentPlayers = [...G.playerOrder];
+            G = passPhase(G);
+            return G.uraniumMarket;
+        };
+        for (const variant of variants) {
+            expect(uraniumAfterBureaucracy('Italy', variant, true), `Italy ${variant}`).to.equal(0);
+            expect(uraniumAfterBureaucracy('Italy', variant, false), `Italy ${variant}, 39 not bought`).to.be.above(0);
+        }
+        // Germany's phase-out is a Recharged rule only.
+        expect(uraniumAfterBureaucracy('Germany', 'recharged', true)).to.equal(0);
+        expect(uraniumAfterBureaucracy('Germany', 'original', true)).to.be.above(0);
+    });
 });

@@ -1307,12 +1307,14 @@ export function move(
                         G.garbageMarket += garbageResupplyValue;
                         G.garbageSupply -= garbageResupplyValue;
 
+                        // Nuclear phase-out: no uranium resupply once plant 39 has been bought.
+                        // Germany: base-recharged.pdf p.7 (Recharged only). Italy:
+                        // maps-france-italy.pdf p.2, under both variants (ruling R5).
+                        const uraniumPhasedOut =
+                            G.card39Bought &&
+                            (G.map.name == 'Italy' || (G.map.name == 'Germany' && G.options.variant == 'recharged'));
                         let uraniumResupplyValue = 0;
-                        if (
-                            G.options.variant != 'recharged' ||
-                            (G.options.map != 'Germany' && G.options.map != 'Italy') ||
-                            !G.card39Bought
-                        ) {
+                        if (!uraniumPhasedOut) {
                             uraniumResupplyValue = Math.min(
                                 G.uraniumSupply,
                                 G.uraniumResupply![G.players.length - 2][G.step - 1],

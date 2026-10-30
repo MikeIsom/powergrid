@@ -586,13 +586,13 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                     }
 
                     // UK & Ireland: starting a network on an island where the player has
-                    // no city yet pays the first-house base + crossIslandSurcharge. There
-                    // is no sea edge so dijkstra reports the target city as unreachable
+                    // no city yet pays crossIslandSurcharge as its connection. There is no
+                    // sea edge so dijkstra reports the target city as unreachable
                     // (price=9999); we override here. The first build ever (player.cities
                     // empty) goes through the normal first-build path and pays no surcharge.
-                    // The jump can only START a city — an empty one (first house). Cities
-                    // already holding a house are not reachable via the jump, even in
-                    // Steps 2/3 when their later slots are open to same-island networks.
+                    // Ruling R3 (engine-update-scope.md): the jump may go into any city of
+                    // the other island with an open slot, paying the surcharge plus that
+                    // slot's building cost, which the slot pricing below adds.
                     if (cityData.island && G.map.crossIslandSurcharge !== undefined && player.cities.length > 0) {
                         const playerIslands = new Set(
                             player.cities
@@ -600,8 +600,7 @@ export function availableMoves(G: GameState, player: Player): AvailableMoves {
                                 .filter((i): i is string => !!i)
                         );
                         if (!playerIslands.has(cityData.island)) {
-                            city.price = othersCount > 0 ? 9999 : 10 + G.map.crossIslandSurcharge;
-                            return;
+                            city.price = G.map.crossIslandSurcharge;
                         }
                     }
 

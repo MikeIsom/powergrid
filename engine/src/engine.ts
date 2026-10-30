@@ -1873,6 +1873,10 @@ export function move(
     }
     if (initialPhase === Phase.Bureaucracy) finishPoweringLog(G, playerNumber, initialRound, move);
 
+    if (G.middleEastStep2Pending && G.phase != initialPhase && G.phase != Phase.GameEnd) {
+        enterStepTwoMiddleEast(G);
+    }
+
     G.currentPlayers.forEach((p) => (G.players[p].availableMoves = availableMoves(G, G.players[p])));
 
     // Tentative-turn bookkeeping: the state is committed (`newTurn`) once the mover can
@@ -2275,7 +2279,6 @@ export function addPowerPlant(G: GameState): void {
             }
         }
 
-        let skipAdd = false;
         if (powerPlant.number == 99) {
             if (G.powerPlantDeckAfterStep3) {
                 G.powerPlantsDeck = G.powerPlantDeckAfterStep3;
@@ -2283,11 +2286,26 @@ export function addPowerPlant(G: GameState): void {
                 G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
             }
 
+            // Middle East: the first Step 3 card brings Step 2 at the start of the next
+            // phase. Shuffle the stack, put the card back under it, and carry on with
+            // this phase by drawing a replacement (maps-middle-east-south-africa.pdf p.2).
+            if (G.map.name == 'Middle East' && G.step == 1) {
+                G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
+                G.powerPlantsDeck.push(powerPlant);
+                if (!G.middleEastStep2Pending) {
+                    G.middleEastStep2Pending = true;
+                    G.log.push({ type: 'event', event: 'Step 2 will begin next phase.' });
+                    if (G.powerPlantsDeck.length > 1) {
+                        addPowerPlant(G);
+                    }
+                }
+                return;
+            }
+
             // Step 3 before Step 2: first make the Step 2 changes, then continue with
             // Step 3's (base-recharged.pdf p.8; both variants, every map). A card drawn
-            // in an auction waits for the end of the phase (toResourcesPhase). Middle
-            // East's first Step 3 card starts Step 2 instead.
-            if (G.step == 1 && G.phase != Phase.Auction && G.map.name != 'Middle East') {
+            // in an auction waits for the end of the phase (toResourcesPhase).
+            if (G.step == 1 && G.phase != Phase.Auction) {
                 enterStepTwo(G, 'Starting Step 2 before Step 3');
             }
 
@@ -2296,26 +2314,16 @@ export function addPowerPlant(G: GameState): void {
             }
 
             if (G.phase != Phase.Auction) {
-                if (G.map.name == 'Middle East' && G.step == 1) {
-                    // Add step 3 card to market, then trigger step 2 process.
-                    const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
-                    market.sort((a, b) => a.number - b.number);
-                    G.actualMarket = market.slice(0, 4);
-                    G.futureMarket = market.slice(4);
-                    enterStepTwoMiddleEast(G);
-                    skipAdd = true;
-                } else {
-                    const powerPlantDiscarded = G.actualMarket.shift();
-                    G.log.push({
-                        type: 'event',
-                        event: `Step 3 will begin next phase, Power Plant ${powerPlantDiscarded?.number} discarded.`,
-                    });
+                const powerPlantDiscarded = G.actualMarket.shift();
+                G.log.push({
+                    type: 'event',
+                    event: `Step 3 will begin next phase, Power Plant ${powerPlantDiscarded?.number} discarded.`,
+                });
 
-                    const market = [...G.actualMarket, ...G.futureMarket];
-                    market.sort((a, b) => a.number - b.number);
-                    G.actualMarket = market;
-                    G.futureMarket = [];
-                }
+                const market = [...G.actualMarket, ...G.futureMarket];
+                market.sort((a, b) => a.number - b.number);
+                G.actualMarket = market;
+                G.futureMarket = [];
             }
         } else {
             if (G.plantDiscountActive && powerPlant.number < G.actualMarket[0].number) {
@@ -2336,36 +2344,34 @@ export function addPowerPlant(G: GameState): void {
             market.sort((a, b) => a.number - b.number);
             G.actualMarket = market;
         } else {
-            if (!skipAdd) {
-                const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
-                market.sort((a, b) => a.number - b.number);
-                if (G.futureMarket.length == 0) {
-                    if (G.map.name == 'Russia') {
-                        // Only four plants in market.
-                        G.actualMarket = market.slice(0, 4);
-                        G.futureMarket = [];
-                    } else {
-                        G.actualMarket = market.slice(0, 6);
-                        G.futureMarket = [];
-                    }
+            const market = [...G.actualMarket, ...G.futureMarket, powerPlant];
+            market.sort((a, b) => a.number - b.number);
+            if (G.futureMarket.length == 0) {
+                if (G.map.name == 'Russia') {
+                    // Only four plants in market.
+                    G.actualMarket = market.slice(0, 4);
+                    G.futureMarket = [];
                 } else {
-                    if (G.map.name == 'Russia') {
-                        // Only 3 plants in actual market and 3 in future market.
-                        G.actualMarket = market.slice(0, 3);
-                        G.futureMarket = market.slice(3);
-                    } else if (G.map.name == 'Benelux' && market[4].type == PowerPlantType.Wind) {
-                        // Add extra ecological plant to actual market.
-                        G.actualMarket = market.slice(0, 5);
-                        G.futureMarket = market.slice(5);
-                    } else {
-                        G.actualMarket = market.slice(0, 4);
-                        G.futureMarket = market.slice(4);
-                    }
+                    G.actualMarket = market.slice(0, 6);
+                    G.futureMarket = [];
                 }
+            } else {
+                if (G.map.name == 'Russia') {
+                    // Only 3 plants in actual market and 3 in future market.
+                    G.actualMarket = market.slice(0, 3);
+                    G.futureMarket = market.slice(3);
+                } else if (G.map.name == 'Benelux' && market[4].type == PowerPlantType.Wind) {
+                    // Add extra ecological plant to actual market.
+                    G.actualMarket = market.slice(0, 5);
+                    G.futureMarket = market.slice(5);
+                } else {
+                    G.actualMarket = market.slice(0, 4);
+                    G.futureMarket = market.slice(4);
+                }
+            }
 
-                if (G.map.name == 'Middle East' && G.step == 1) {
-                    removePlantsForMiddleEastStep1(G);
-                }
+            if (G.map.name == 'Middle East' && G.step == 1) {
+                removePlantsForMiddleEastStep1(G);
             }
         }
     }
@@ -2609,35 +2615,27 @@ function startStep(G: GameState, step: 2 | 3, event = `Starting Step ${step}.`) 
     (G.pendingMessages ??= []).push(`Starting Step ${step}.`);
 }
 
+// Middle East: Step 2 begins at the start of the phase after the first Step 3 card
+// was drawn. Remove the two lowest plants, one after the other, drawing a replacement
+// after each (maps-middle-east-south-africa.pdf p.2). This comes before the
+// discount token is placed on the smallest plant.
 function enterStepTwoMiddleEast(G: GameState) {
-    // Shuffle deck of remaining power plants and put step 3 card back underneath.
-    const step3 = G.futureMarket.pop()!;
-    G.powerPlantsDeck = shuffle(G.powerPlantsDeck, G.seed);
-    G.powerPlantsDeck.push(step3);
+    G.middleEastStep2Pending = undefined;
+    startStep(G, 2, 'Starting Step 2, discarding two power plants.');
 
-    // Draw new plant to replace step 3 card.
-    addPowerPlant(G);
-
-    // Discard two lowest power plants from current market.
-    startStep(G, 2, 'Step 2 will begin next phase, discarding two power plants.');
-
-    const powerPlantDiscarded1 = G.actualMarket.shift();
-    if (powerPlantDiscarded1) {
-        G.log.push({
-            type: 'event',
-            event: `Power Plant ${powerPlantDiscarded1.number} discarded to start step 2.`,
-        });
-        addPowerPlant(G);
+    const plantDiscountActive = G.plantDiscountActive;
+    G.plantDiscountActive = false;
+    for (let i = 0; i < 2; i++) {
+        const powerPlantDiscarded = G.actualMarket.shift();
+        if (powerPlantDiscarded) {
+            G.log.push({
+                type: 'event',
+                event: `Power Plant ${powerPlantDiscarded.number} discarded to start step 2.`,
+            });
+            addPowerPlant(G);
+        }
     }
-
-    const powerPlantDiscarded2 = G.actualMarket.shift();
-    if (powerPlantDiscarded2) {
-        G.log.push({
-            type: 'event',
-            event: `Power Plant ${powerPlantDiscarded2.number} discarded to start step 2.`,
-        });
-        addPowerPlant(G);
-    }
+    G.plantDiscountActive = plantDiscountActive;
 }
 
 // Australia CO2 tax: when Step 3 begins, the $1 and $2 resource spaces close for
@@ -2957,21 +2955,17 @@ function toResourcesPhase(G: GameState) {
     }
 
     if (G.futureMarket.find((pp) => pp.number == 99)) {
-        if (G.map.name == 'Middle East' && G.step == 1) {
-            enterStepTwoMiddleEast(G);
-        } else {
-            // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
-            if (G.step == 1) {
-                enterStepTwo(G, 'Starting Step 2 before Step 3');
-            }
-            const powerPlantDiscarded = G.actualMarket.shift();
-            G.futureMarket.pop();
-            startStep(G, 3, `Starting Step 3, Power Plant ${powerPlantDiscarded?.number} discarded.`);
-            applyAustraliaStep3Shift(G);
-
-            G.actualMarket = [...G.actualMarket, ...G.futureMarket];
-            G.futureMarket = [];
+        // Step 3 before Step 2 (base-recharged.pdf p.8): Step 2's changes come first.
+        if (G.step == 1) {
+            enterStepTwo(G, 'Starting Step 2 before Step 3');
         }
+        const powerPlantDiscarded = G.actualMarket.shift();
+        G.futureMarket.pop();
+        startStep(G, 3, `Starting Step 3, Power Plant ${powerPlantDiscarded?.number} discarded.`);
+        applyAustraliaStep3Shift(G);
+
+        G.actualMarket = [...G.actualMarket, ...G.futureMarket];
+        G.futureMarket = [];
     }
 
     G.phase = Phase.Resources;

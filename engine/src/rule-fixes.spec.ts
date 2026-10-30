@@ -215,4 +215,42 @@ describe('Rule fixes', () => {
         G.garbageMarket = 18; // cheapest garbage at $3
         expect(buy(), 'from the $3 space').to.equal(2);
     });
+
+    it('F13: begins Middle East Step 2 at the start of the next phase', () => {
+        let G = setup(3, { map: 'Middle East', variant: 'recharged' }, 'f13');
+        G.phase = Phase.Building;
+        G.currentPlayers = [G.playerOrder[2]];
+        G.actualMarket = plants(3, 4, 5, 7);
+        G.futureMarket = plants(8, 9, 10);
+        G.powerPlantsDeck = plants(99, 15, 16, 18, 20, 21);
+        addPowerPlant(G);
+        expect(G.step, 'still Step 1 for the rest of the phase').to.equal(1);
+        expect(G.powerPlantsDeck[G.powerPlantsDeck.length - 1].number, 'card back under the stack').to.equal(99);
+        expect(G.actualMarket.length + G.futureMarket.length, 'replacement drawn').to.equal(8);
+
+        G = passPhase(G);
+        expect(G.phase).to.equal(Phase.Bureaucracy);
+        expect(G.step).to.equal(2);
+        const events = G.log.map((l) => (l.type == 'event' ? l.event : ''));
+        expect(events).to.include('Power Plant 3 discarded to start step 2.');
+        expect(events).to.include('Power Plant 4 discarded to start step 2.');
+        expect(G.actualMarket.length + G.futureMarket.length).to.equal(8);
+    });
+
+    it('F13: puts a Middle East Step 3 card drawn in an auction back under the stack', () => {
+        let G = setup(3, { map: 'Middle East', variant: 'recharged' }, 'f13-auction');
+        G.round = 2;
+        G.plantDiscountActive = false;
+        G.actualMarket = plants(3, 4, 5, 7);
+        G.futureMarket = plants(8, 9, 10);
+        G.powerPlantsDeck = plants(99, 15, 16, 18, 20, 21);
+        addPowerPlant(G);
+        expect([...G.actualMarket, ...G.futureMarket].map((p) => p.number)).not.to.include(99);
+        expect(G.actualMarket.length + G.futureMarket.length).to.equal(8);
+        expect(G.step).to.equal(1);
+
+        G = passPhase(G);
+        expect(G.phase).to.equal(Phase.Resources);
+        expect(G.step).to.equal(2);
+    });
 });

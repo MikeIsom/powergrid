@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power Grid viewer bundle</title>
+<style>
+:root { color-scheme: light dark; --bg: #f6f8fa; --ink: #1f2a36; --muted: #5b6b7f; --code: #e4e9ef; }
+@media (prefers-color-scheme: dark) { :root { --bg: #171717; --ink: #e6ecf2; --muted: #9aa8b8; --code: #2c3541; } }
+body { margin: 0; padding: 32px 16px; background: var(--bg); color: var(--ink); font: 16px/1.5 Arial, sans-serif; }
+main { max-width: 720px; margin: 0 auto; }
+code { background: var(--code); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
+p.muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Power Grid viewer bundle</h1>
+<p>Built viewer for <a href="https://www.boardgamers.space">Boardgamers</a>' Power Grid. Paste one of these into BGS's <em>Custom Viewer URL</em>:</p>
+<p><strong>Standard</strong> (loads its stylesheet from beside the script):<br><code>https://mikeisom.github.io/powergrid/powergrid-viewer.umd.min.js</code></p>
+<p><strong>Inline CSS</strong> (styles baked into the script):<br><code>https://mikeisom.github.io/powergrid/inline/powergrid-viewer.umd.min.js</code></p>
+<p class="muted">Built from viewer commit 41a9c2b on top of boardgamers/powergrid master (engine 2.0.37, viewer 2.3.32).</p>
+</main>
+</body>
+</html>
